@@ -148,6 +148,45 @@ function isMajor(source, code){
 
 const POOL = 60;   // 클라이언트에 넘길 최대 건수 (화면에는 상위 20건만 뜬다)
 
+/* ──────────────────────────────────────────────
+   하루 한 판. 매일 현지시각 오전 6시에 새 판이 나온다.
+
+   캐시 만료를 "다음 발행 시각까지"로 잡으면 별도 스케줄러 없이도
+   발행 시각이 고정된다. 발행 시각이 지나면 첫 방문자가 새 판을
+   만들게 되고, 그 사이 방문자는 stale-while-revalidate 덕분에
+   기다리지 않고 직전 판을 본다.
+   ────────────────────────────────────────────── */
+const PUBLISH_HOUR = 6;   // 현지시각 기준
+
+function tzOffsetMs(tz, date){
+  const s = new Intl.DateTimeFormat('en-US', { timeZone:tz, timeZoneName:'longOffset' })
+    .formatToParts(date).find(p => p.type === 'timeZoneName').value;
+  const m = s.match(/GMT([+-])(\d{2}):(\d{2})/);
+  if (!m) return 0;
+  return (m[1] === '-' ? -1 : 1) * ((+m[2]) * 60 + (+m[3])) * 60000;
+}
+
+function edition(tz){
+  const now   = new Date();
+  const off   = tzOffsetMs(tz, now);
+  const local = new Date(now.getTime() + off);          // 현지시각을 UTC처럼 다룬다
+
+  const cur = new Date(local);
+  cur.setUTCHours(PUBLISH_HOUR, 0, 0, 0);
+  if (local < cur) cur.setUTCDate(cur.getUTCDate() - 1); // 아직 오늘 6시 전이면 어제 판
+
+  const next = new Date(cur);
+  next.setUTCDate(next.getUTCDate() + 1);
+
+  const nextUtcMs = next.getTime() - off;
+  return {
+    date: cur.toISOString().slice(0, 10),               // 판의 날짜 (현지 기준)
+    hour: PUBLISH_HOUR,
+    nextAt: new Date(nextUtcMs).toISOString(),
+    maxAge: Math.max(600, Math.floor((nextUtcMs - now.getTime()) / 1000)),
+  };
+}
+
 const WINDOW = 'when:3d';
 const PER_FEED = 12;
 
@@ -353,9 +392,12 @@ export default async function handler(req, res){
 
   const articles = await attachKorean(collected);
   const translated = articles.filter(a => a.ko).length;
+  const ed = edition(c.tz);
 
-  res.setHeader('Cache-Control','s-maxage=14400, stale-while-revalidate=86400');
+  res.setHeader('Cache-Control', `s-maxage=${ed.maxAge}, stale-while-revalidate=172800`);
   res.status(200).json({
+    edition: ed,
+    show: 20,
     translated,
     pool: all.length,
     major: major.length,
