@@ -16,22 +16,72 @@ export const config = { maxDuration: 30 };
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 const BODY_LIMIT = 6000;   // 요약에 넘길 본문 최대 길이
 
-/* 구글 뉴스 링크(news.google.com/rss/articles/CBMi...)를 실제 기사 주소로 */
+/* 구글 뉴스 링크를 실제 기사 주소로 푼다.
+
+   구글은 2024년부터 원문 주소를 감춘 불투명 ID(AU_yqL...)를 쓴다.
+   단순 리다이렉트로는 안 풀리고, 구글의 주소 해석 엔드포인트에
+   기사 페이지에서 얻은 서명(sg)과 시각(ts)을 함께 보내야 한다. */
+async function viaBatchExecute(id){
+  const page = await fetch(`https://news.google.com/rss/articles/${id}`, {
+    headers:{ 'User-Agent':UA },
+  });
+  const html = await page.text();
+
+  const sg = html.match(/data-n-a-sg="([^"]+)"/)?.[1];
+  const ts = html.match(/data-n-a-ts="([^"]+)"/)?.[1];
+  if (!sg || !ts) return null;
+
+  const inner = JSON.stringify(['garturlreq',
+    [['X','X',['X','X'],null,null,1,1,'US:en',null,1,null,null,null,null,null,0,1],
+     'X','X',1,[1,1,1],1,1,null,0,0,null,0],
+    id, Number(ts), sg]);
+
+  const r = await fetch('https://news.google.com/_/DotsSplashUi/data/batchexecute', {
+    method:'POST',
+    headers:{
+      'content-type':'application/x-www-form-urlencoded;charset=UTF-8',
+      'User-Agent':UA,
+    },
+    body: new URLSearchParams({ 'f.req': JSON.stringify([[['Fbv4je', inner]]]) }),
+  });
+  if (!r.ok) return null;
+
+  const text = (await r.text())
+    .replace(/\\"/g,'"')
+    .replace(/\\u003d/g,'=').replace(/\\u0026/g,'&').replace(/\\\//g,'/');
+
+  const hit = [...text.matchAll(/https?:\/\/[^\s"'\\\]]+/g)]
+    .map(m => m[0])
+    .find(u => !/(^https?:\/\/(news|www|accounts|policies|support|lh\d|ssl)\.g(oogle|static))/.test(u));
+
+  return hit || null;
+}
+
 async function resolveUrl(url){
   if (!url.includes('news.google.com')) return { url, html:null };
 
+  const id = url.match(/\/rss\/articles\/([^?/]+)/)?.[1]
+          || url.match(/\/articles\/([^?/]+)/)?.[1];
+
+  if (id){
+    try {
+      const real = await viaBatchExecute(id);
+      if (real) return { url:real, html:null };
+    } catch (e) {
+      console.error('batchexecute failed:', e.message);
+    }
+  }
+
+  // 예비: 그냥 따라가 본다 (옛 형식 링크는 이걸로 풀린다)
   const r = await fetch(url, { redirect:'follow', headers:{ 'User-Agent':UA } });
   const html = await r.text();
-
   if (r.url && !r.url.includes('news.google.com')) return { url:r.url, html };
 
-  // 리다이렉트가 아니라 중간 페이지를 준 경우, 원문 주소를 본문에서 찾는다
   const m =
     html.match(/data-n-au="([^"]+)"/) ||
-    html.match(/<c-wiz[^>]*>[\s\S]{0,400}?href="(https?:\/\/(?!news\.google|www\.google|accounts\.google)[^"]+)"/) ||
     html.match(/href="(https?:\/\/(?!news\.google|www\.google|accounts\.google|policies\.google|support\.google)[^"]+)"/);
 
-  return m ? { url:m[1].replace(/&amp;/g,'&'), html:null } : { url, html };
+  return m ? { url:m[1].replace(/&amp;/g,'&'), html:null } : { url, html:null };
 }
 
 /* HTML에서 읽을 만한 본문만 남긴다 */
@@ -110,6 +160,15 @@ export default async function handler(req, res){
   try {
     const target = decodeURIComponent(raw);
     const { url, html } = await resolveUrl(target);
+
+    if (url.includes('news.google.com')){
+      res.setHeader('Cache-Control','s-maxage=600');
+      res.status(200).json({
+        ok:false, reason:'noLink', source:target,
+        message:'원문 주소를 찾지 못했습니다. 원문 링크로 열어 주세요.',
+      });
+      return;
+    }
 
     let page = html;
     if (!page){
