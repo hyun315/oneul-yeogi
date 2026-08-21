@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>오늘 여기 — 해외에 사는 한국인을 위한 현지 소식</title>
+<meta name="description" content="사는 나라와 도시, 관심 주제를 고르면 오늘 여기서 일어난 일을 모아 보여줍니다." />
+<meta name="theme-color" content="#2A2440" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+:root{
+  --dusk:#2A2440;
+  --dusk-2:#3B3457;
+  --paper:#F2EFF4;
+  --card:#FFFFFF;
+  --ink:#221D2E;
+  --ink-2:#6A6480;
+  --here:#2F8F7D;
+  --home:#C4453E;
+  --line:rgba(34,29,46,.11);
+  --display:"Gowun Batang",serif;
+  --body:"Pretendard Variable",Pretendard,-apple-system,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  /* 위는 고정, 아래(뉴스)만 스크롤 */
+  height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+}
+.top{flex:none}
+.scroller{
+  flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-bottom:calc(28px + env(safe-area-inset-bottom));
+}
+.wrap{max-width:700px;margin:0 auto;padding:0 18px}
+:focus-visible{outline:2px solid var(--here);outline-offset:3px;border-radius:5px}
+
+/* ── 머리말 (압축) ───────────────────────── */
+header{background:var(--dusk);color:#EFECF5}
+.hrow{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:14px;padding:11px 18px 9px;flex-wrap:wrap;
+}
+.mark{display:flex;align-items:baseline;gap:8px;min-width:0}
+.mark h1{
+  font-family:var(--display);font-weight:700;font-size:21px;
+  margin:0;letter-spacing:.05em;white-space:nowrap;
+}
+.mark span{
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:rgba(239,236,245,.4);white-space:nowrap;
+}
+
+/* 시그니처: 해외에 살면 시계가 두 개다 */
+.clocks{display:flex;align-items:center;gap:15px}
+.clock{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.clock .place{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;
+}
+.clock .place::before{content:"";width:4px;height:4px;border-radius:50%}
+.clock.here .place{color:#7FD9C4}
+.clock.here .place::before{background:var(--here)}
+.clock.home .place{color:#F0A19C}
+.clock.home .place::before{background:var(--home)}
+.clock .time{
+  font-family:var(--mono);font-weight:500;font-size:17px;
+  letter-spacing:-.01em;color:#EFECF5;
+}
+.gap{font-family:var(--mono);font-size:9.5px;color:rgba(239,236,245,.38)}
+
+/* 발행 정보 한 줄 */
+.band{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  padding:0 18px 10px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.02em;
+  color:rgba(239,236,245,.5);
+}
+.band b{color:#7FD9C4;font-weight:600}
+.band .sep{opacity:.4}
+.badge{
+  margin-left:auto;padding:2px 9px;border-radius:999px;
+  border:1px solid rgba(239,236,245,.24);
+  font-size:9.5px;color:rgba(239,236,245,.7);white-space:nowrap;
+}
+/* ── 조건 줄 ─────────────────────────────── */
+.bar{
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+}
+.bar-in{display:flex;align-items:center;gap:12px;padding:11px 0}
+.cond{flex:1;min-width:0}
+.cond .eyebrow{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-2);
+}
+.cond .now{
+  font-size:14.5px;font-weight:600;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.cond .now i{font-style:normal;color:var(--ink-2);font-weight:400;padding:0 2px}
+.setup{
+  flex:none;border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+  font-family:var(--body);font-size:13px;font-weight:600;
+  padding:8px 15px;border-radius:999px;cursor:pointer;
+}
+.setup:active{background:var(--ink);color:var(--card)}
+
+/* ── 설정 ───────────────────────────────── */
+.panel{display:none;padding:2px 0 24px;border-bottom:1px solid var(--line)}
+.panel.open{display:block}
+.field{margin-top:22px}
+.field > .cap{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);display:block;margin-bottom:10px;
+}
+select{
+  width:100%;font-family:var(--body);font-size:16px;font-weight:600;color:var(--ink);
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:13px 15px;appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%23221D2E' stroke-width='1.6' fill='none'/></svg>");
+  background-repeat:no-repeat;background-position:right 15px center;
+}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  font-family:var(--body);font-size:14px;font-weight:500;color:var(--ink-2);
+  background:var(--card);border:1px solid var(--line);
+  padding:8px 14px;border-radius:999px;cursor:pointer;
+}
+.chip[aria-pressed="true"]{
+  background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600;
+}
+.group{font-size:12px;font-weight:600;color:var(--ink-2);margin:14px 0 8px}
+.group:first-of-type{margin-top:0}
+.note{font-size:12.5px;color:var(--ink-2);margin-top:12px;line-height:1.55}
+.done{
+  width:100%;margin-top:26px;padding:15px;border:none;border-radius:10px;
+  background:var(--ink);color:#fff;cursor:pointer;
+  font-family:var(--body);font-size:15px;font-weight:600;
+}
+
+/* ── 소식 ───────────────────────────────── */
+/* ── 광고 ─────────────────────────────── */
+.adrail{
+  background:var(--dusk-2);
+  border-top:1px solid rgba(239,236,245,.1);
+}
+.adrail[hidden]{display:none}
+.adwrap{
+  position:relative;cursor:pointer;padding:0;
+  display:block;line-height:0;
+}
+.adslot{display:block}
+.adslot img{
+  display:block;width:100%;height:auto;
+  max-height:150px;object-fit:contain;
+}
+/* 이미지가 없을 때만 문구로 대신한다 */
+.adslot .fallback{
+  display:block;padding:24px 18px;line-height:1.5;
+  font-size:14px;font-weight:600;color:#EFECF5;
+}
+.adtag{
+  position:absolute;left:0;top:0;
+  padding:2px 8px;border-radius:0 0 6px 0;
+  background:rgba(34,29,46,.62);
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+  color:rgba(239,236,245,.85);line-height:1.6;
+}
+.addots{
+  display:flex;gap:4px;position:absolute;right:8px;bottom:6px;
+  padding:3px 6px;border-radius:999px;background:rgba(34,29,46,.5);
+}
+.addots i{width:4px;height:4px;border-radius:50%;background:rgba(239,236,245,.35)}
+.addots i.on{background:#7FD9C4}
+@media (prefers-reduced-motion:no-preference){
+  .adslot{animation:fadein .4s ease}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+}
+
+/* 배너를 누르면 광고주가 준 원페이지가 펼쳐진다 */
+.sheet{
+  position:fixed;inset:0;z-index:60;background:rgba(34,29,46,.55);
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.sheet[hidden]{display:none}
+.sheet-in{
+  background:var(--card);width:100%;max-width:700px;
+  max-height:92dvh;overflow-y:auto;
+  border-radius:16px 16px 0 0;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom));
+}
+.sheet-bar{
+  position:sticky;top:0;background:var(--card);z-index:2;
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px;border-bottom:1px solid var(--line);
+}
+.sheet-bar .who{
+  flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);
+}
+.sheet-bar button{
+  border:none;background:rgba(34,29,46,.06);color:var(--ink);
+  width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;
+  font-family:var(--body);line-height:1;
+}
+.sheet-body{padding:18px}
+.sheet-body img{width:100%;height:auto;border-radius:10px;display:block}
+.sheet-body h3{font-family:var(--display);font-size:21px;margin:16px 0 0;font-weight:700}
+.sheet-body p{font-size:14.5px;line-height:1.72;color:var(--ink-2);margin:10px 0 0;white-space:pre-wrap}
+.sheet-cta{
+  display:block;text-align:center;margin-top:20px;padding:15px;
+  background:var(--ink);color:#fff;border-radius:10px;
+  text-decoration:none;font-size:15px;font-weight:600;
+}
+
+.feed{padding:8px 0 20px}
+.item{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px 17px 14px;margin-top:11px;
+}
+.item.hit{border-color:rgba(47,143,125,.5)}
+.head{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-2);
+}
+.head .src{font-weight:600;color:var(--ink)}
+.head .sep{opacity:.35}
+
+/* 제목이 곧 버튼이다 — 누르면 요약이 펼쳐진다 */
+.tit{
+  display:block;width:100%;text-align:left;cursor:pointer;
+  background:none;border:none;padding:0;margin:9px 0 0;color:inherit;
+  font-family:var(--display);font-weight:700;font-size:18.5px;
+  line-height:1.45;letter-spacing:-.005em;
+}
+.tit::after{
+  content:"";display:inline-block;vertical-align:middle;
+  width:7px;height:7px;margin-left:8px;
+  border-right:1.8px solid var(--ink-2);border-bottom:1.8px solid var(--ink-2);
+  transform:translateY(-3px) rotate(45deg);opacity:.5;
+}
+.item.open .tit::after{transform:translateY(1px) rotate(-135deg);opacity:.8}
+.item.open .tit{color:var(--here)}
+.orig{
+  font-size:12px;color:var(--ink-2);opacity:.62;margin:7px 0 0;line-height:1.45;
+  padding-left:9px;border-left:2px solid var(--line);
+}
+.body{
+  margin-top:12px;padding:13px 14px;border-radius:9px;
+  background:rgba(47,143,125,.06);
+  font-size:14.5px;line-height:1.72;white-space:pre-wrap;
+}
+.body.wait{color:var(--ink-2);font-size:13.5px;white-space:normal}
+.body.fail{background:rgba(196,69,62,.07);color:var(--ink-2);font-size:13.5px;white-space:normal}
+.why{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+  margin-top:13px;padding-top:12px;border-top:1px solid var(--line);
+}
+.go{
+  margin-left:auto;font-family:var(--mono);font-size:10.5px;font-weight:600;
+  color:var(--ink-2);text-decoration:none;white-space:nowrap;
+}
+.go:active{color:var(--here)}
+.pill{
+  font-family:var(--mono);font-size:10px;letter-spacing:.03em;
+  padding:3px 8px;border-radius:4px;
+  background:rgba(47,143,125,.11);color:var(--here);font-weight:600;
+}
+.pill.plain{background:rgba(34,29,46,.05);color:var(--ink-2);font-weight:400}
+
+.rule{
+  display:flex;align-items:center;gap:11px;margin:28px 0 0;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);
+}
+.rule::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.msg{text-align:center;padding:60px 20px;color:var(--ink-2);font-size:14.5px}
+.msg strong{display:block;color:var(--ink);font-size:16.5px;margin-bottom:7px;font-weight:600}
+.again{
+  margin-top:16px;padding:10px 20px;border:1.5px solid var(--ink);border-radius:999px;
+  background:transparent;color:var(--ink);font-family:var(--body);
+  font-size:13.5px;font-weight:600;cursor:pointer;
+}
+.skel{height:108px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-top:11px;opacity:.7}
+@media (prefers-reduced-motion:no-preference){
+  .skel{animation:b 1.5s ease-in-out infinite}
+  @keyframes b{50%{opacity:.3}}
+}
+footer{font-size:11.5px;color:var(--ink-2);text-align:center;padding:8px 0 0;opacity:.75}
+</style>
+</head>
+<body>
+
+<div class="top">
+<header>
+  <div class="wrap hrow">
+    <div class="mark">
+      <h1>오늘 여기</h1>
+      <span>Korean abroad</span>
+    </div>
+    <div class="clocks">
+      <div class="clock here">
+        <span class="place" id="hereName">여기</span>
+        <span class="time" id="hereTime">--:--</span>
+      </div>
+      <div class="clock home">
+        <span class="place">서울</span>
+        <span class="time" id="homeTime">--:--</span>
+        <span class="gap" id="gap"></span>
+      </div>
+    </div>
+  </div>
+  <div class="wrap band">
+    <span id="stamp">불러오는 중</span>
+    <span class="sep">·</span>
+    <span><b id="shown">20</b>건</span>
+    <span class="badge" id="cycle">매일 갱신</span>
+  </div>
+</header>
+
+<div class="adrail" id="adrail" hidden>
+  <div class="wrap adwrap" id="adwrap">
+    <div class="adslot" id="adslot"></div>
+    <span class="adtag">AD</span>
+    <div class="addots" id="addots"></div>
+  </div>
+</div>
+
+<div class="bar">
+  <div class="wrap bar-in">
+    <div class="cond">
+      <div class="eyebrow">보고 있는 조건</div>
+      <div class="now" id="now">준비 중</div>
+    </div>
+    <button class="setup" id="setup" aria-expanded="false">바꾸기</button>
+  </div>
+</div>
+</div>
+
+<div class="scroller">
+<div class="wrap">
+  <section class="panel" id="panel">
+    <div class="field">
+      <span class="cap">사는 나라</span>
+      <select id="country" aria-label="사는 나라"></select>
+    </div>
+    <div class="field">
+      <span class="cap">사는 도시 — 여러 곳 고를 수 있습니다</span>
+      <div class="chips" id="cities"></div>
+    </div>
+    <div class="field">
+      <span class="cap">관심 있는 것</span>
+      <div id="topics"></div>
+    </div>
+    <p class="note">
+      고른 조건으로 소식을 걸러내지는 않습니다. 해당하는 소식을 맨 위로 올리고,
+      오늘 그런 소식이 없으면 그 나라의 주요 뉴스로 이어서 보여줍니다.
+    </p>
+    <button class="done" id="done">이대로 보기</button>
+  </section>
+
+  <main class="feed" id="feed">
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+  </main>
+
+  <footer id="foot"></footer>
+</div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-in">
+    <div class="sheet-bar">
+      <span class="who" id="sheetWho">광고</span>
+      <button id="sheetClose" aria-label="닫기">✕</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
+<script>
+const LIST = [
+  { code:'ID', name:'인도네시아' },
+  { code:'VN', name:'베트남' },
+  { code:'PH', name:'필리핀' },
+  { code:'KH', name:'캄보디아' },
+];
+const KEY = 'oneulyeogi.v1';
+const $ = id => document.getElementById(id);
+
+let prefs = read();
+let meta = { cities:[], topics:[], tz:'Asia/Jakarta', name:'', flag:'' };
+let items = [];
+
+function read(){
+  try { const r = JSON.parse(localStorage.getItem(KEY)); if (r?.country) return r; } catch {}
+  return { country:'ID', cities:[], topics:[] };
+}
+const write = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {} };
+
+/* ── 두 개의 시계 ── */
+function fmt(tz, opt){ return new Intl.DateTimeFormat('ko-KR', { timeZone:tz, ...opt }); }
+function ticks(){
+  const now = new Date();
+  const t = { hour:'2-digit', minute:'2-digit', hour12:false };
+  $('hereTime').textContent = fmt(meta.tz, t).format(now);
+  $('homeTime').textContent = fmt('Asia/Seoul', t).format(now);
+
+  const off = tz => {
+    const s = new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'longOffset'})
+      .formatToParts(now).find(p=>p.type==='timeZoneName').value.replace('GMT','') || '+0';
+    const [h,m='0'] = s.split(':');
+    return parseInt(h,10) + (parseInt(h,10) < 0 ? -1 : 1) * (parseInt(m,10)/60);
+  };
+  const diff = Math.round(off('Asia/Seoul') - off(meta.tz));
+  $('gap').textContent = diff === 0 ? '시차 없음' : `${diff > 0 ? '+' : ''}${diff}시간`;
+}
+
+/* ── 점수: 걸러내지 않고 위로 올린다 ── */
+function rate(a){
+  const city  = a.cities.some(c => prefs.cities.includes(c));
+  const topic = a.topics.some(t => prefs.topics.includes(t));
+  const hrs   = (Date.now() - new Date(a.published)) / 36e5;
+  return { s: 1 + (city?3:0) + (topic?3:0) + (hrs<12?1:0), city, topic };
+}
+const nameOf = (list, id) => list.find(x => x.id === id)?.label ?? id;
+
+function ago(iso){
+  const h = Math.floor((Date.now() - new Date(iso)) / 36e5);
+  if (isNaN(h)) return '';
+  if (h < 1) return '방금';
+  if (h < 24) return `${h}시간 전`;
+  return `${Math.floor(h/24)}일 전`;
+}
+
+function drawBar(){
+  const c = LIST.find(x => x.code === prefs.country)?.name ?? prefs.country;
+  const city  = prefs.cities.length ? prefs.cities.map(i=>nameOf(meta.cities,i)).join('·') : '전 지역';
+  const topic = prefs.topics.length ? prefs.topics.map(i=>nameOf(meta.topics,i)).join('·') : '전체';
+  $('now').innerHTML = `${meta.flag||''} ${c} <i>·</i> ${city} <i>·</i> ${topic}`;
+  $('hereName').textContent = prefs.cities.length === 1 ? nameOf(meta.cities, prefs.cities[0]) : c;
+}
+
+function drawPanel(){
+  $('country').innerHTML = LIST.map(c =>
+    `<option value="${c.code}"${c.code===prefs.country?' selected':''}>${c.name}</option>`).join('');
+
+  const chip = (x, on, g) =>
+    `<button class="chip" aria-pressed="${on}" data-g="${g}" data-id="${x.id}">${x.label}</button>`;
+
+  $('cities').innerHTML = meta.cities.map(x => chip(x, prefs.cities.includes(x.id), 'cities')).join('');
+
+  const groups = [...new Set(meta.topics.map(t => t.group))];
+  $('topics').innerHTML = groups.map(g => `
+    <div class="group">${g}</div>
+    <div class="chips">${meta.topics.filter(t=>t.group===g)
+      .map(t => chip(t, prefs.topics.includes(t.id), 'topics')).join('')}</div>`).join('');
+}
+
+const MAX_SHOW = 20;   // 화면에 띄울 최대 건수
+
+function drawFeed(){
+  const ranked = items.map(a => ({ ...a, ...rate(a) }))
+    .sort((x,y) => y.s - x.s || new Date(y.published) - new Date(x.published))
+    .slice(0, MAX_SHOW);
+
+  if (!ranked.length){
+    $('feed').innerHTML = `<div class="msg"><strong>아직 받아온 소식이 없습니다</strong>
+      수집 서버가 응답하지 않았습니다.
+      <br><button class="again" onclick="load()">다시 불러오기</button></div>`;
+    return;
+  }
+
+  const picky = prefs.cities.length || prefs.topics.length;
+  let html = '', split = false;
+
+  ranked.forEach((a, i) => {
+    if (picky && !split && a.s <= 2 && i > 0){
+      html += `<div class="rule">그 밖의 오늘 소식</div>`;
+      split = true;
+    }
+    const tags = [];
+    if (a.city)  a.cities.filter(c=>prefs.cities.includes(c)).forEach(c => tags.push(`<span class="pill">${nameOf(meta.cities,c)}</span>`));
+    if (a.topic) a.topics.filter(t=>prefs.topics.includes(t)).forEach(t => tags.push(`<span class="pill">${nameOf(meta.topics,t)}</span>`));
+    if (!tags.length) tags.push(`<span class="pill plain">${meta.name} 주요 소식</span>`);
+
+    const title = a.ko?.title || a.title;
+    const showOrig = a.ko && a.ko.title !== a.title;
+
+    html += `<article class="item${a.s>=5?' hit':''}" data-link="${encodeURIComponent(a.link)}" data-title="${encodeURIComponent(a.title)}">
+      <div class="head"><span class="src">${a.source || '현지 매체'}</span>
+        <span class="sep">/</span><span>${ago(a.published)}</span></div>
+      <button class="tit" aria-expanded="false">${title}</button>
+      ${showOrig ? `<p class="orig">${a.title}</p>` : ''}
+      <div class="body" hidden></div>
+      <div class="why">${tags.join('')}
+        <a class="go" href="${a.link}" target="_blank" rel="noopener">원문 ↗</a></div>
+    </article>`;
+  });
+  $('feed').innerHTML = html;
+}
+
+async function load(){
+  $('feed').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+  try {
+    const r = await fetch(`/api/news?country=${prefs.country}`);
+    if (!r.ok) throw 0;
+    const d = await r.json();
+
+    meta = { cities:d.cities, topics:d.topics, tz:d.timezone, name:d.name, flag:d.flag };
+    items = d.articles;
+
+    const ok = new Set(meta.cities.map(c=>c.id));
+    prefs.cities = prefs.cities.filter(c => ok.has(c));
+    write();
+
+    const t = new Date(d.collectedAt);
+    const stampFmt = fmt(meta.tz, {
+      month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false,
+    });
+    $('stamp').textContent = `수집 ${stampFmt.format(t)}`;
+
+    const ed = d.edition;
+    if (ed){
+      $('cycle').textContent = `매일 오전 ${ed.hour}시 발행`;
+    }
+    const shown = Math.min(MAX_SHOW, items.length);
+    $('shown').textContent = `${shown}`;
+    $('foot').textContent = d.translated
+      ? `${d.name} 주요 언론 ${d.major}곳 · 한국어 ${d.translated}건`
+      : `${d.name} 주요 언론 · 원문 표기`;
+
+    ticks(); drawBar(); drawPanel(); drawFeed();
+  } catch {
+    $('feed').innerHTML = `<div class="msg"><strong>소식을 불러오지 못했습니다</strong>
+      연결을 확인한 뒤 다시 시도해 주세요.
+      <br><button class="again" onclick="load()">다시 불러오기</button></div>`;
+  }
+}
+
+/* ── 제목을 누르면 요약이 펼쳐진다 ── */
+const summaryCache = new Map();
+
+async function toggleItem(card){
+  const btn  = card.querySelector('.tit');
+  const body = card.querySelector('.body');
+  const open = card.classList.toggle('open');
+  btn.setAttribute('aria-expanded', String(open));
+
+  if (!open){ body.hidden = true; return; }
+  body.hidden = false;
+
+  const link = card.dataset.link;
+  if (summaryCache.has(link)){
+    const c = summaryCache.get(link);
+    body.className = c.ok ? 'body' : 'body fail';
+    body.textContent = c.text;
+    return;
+  }
+
+  body.className = 'body wait';
+  body.textContent = '원문을 읽고 요약하는 중입니다…';
+
+  try {
+    const r = await fetch(`/api/summary?u=${link}&t=${card.dataset.title}`);
+    const d = await r.json();
+    const text = d.ok ? d.summary : (d.message || '요약을 만들지 못했습니다.');
+    summaryCache.set(link, { ok:d.ok, text });
+    body.className = d.ok ? 'body' : 'body fail';
+    body.textContent = text;
+  } catch {
+    body.className = 'body fail';
+    body.textContent = '요약을 불러오지 못했습니다. 원문을 열어 확인해 주세요.';
+  }
+}
+
+/* ── 광고 ── */
+let ads = [], adIdx = 0, adTimer = null, rotateMs = 3000;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function loadAds(){
+  clearInterval(adTimer);
+  try {
+    const r = await fetch(`/api/ads?country=${prefs.country}`);
+    const d = await r.json();
+    ads = Array.isArray(d.ads) ? d.ads : [];
+    rotateMs = Number(d.rotateMs) || 3000;
+  } catch { ads = []; }
+
+  if (!ads.length){ $('adrail').hidden = true; return; }
+  $('adrail').hidden = false;
+  adIdx = 0;
+  paintAd();
+  if (ads.length > 1) adTimer = setInterval(() => {
+    adIdx = (adIdx + 1) % ads.length;
+    paintAd();
+  }, rotateMs);
+}
+
+function paintAd(){
+  const a = ads[adIdx];
+  if (!a) return;
+  $('adslot').innerHTML = a.banner
+    ? `<img src="${esc(a.banner)}" alt="${esc(a.advertiser || '광고')}">`
+    : `<span class="fallback">${esc(a.headline || a.advertiser || '')}</span>`;
+  $('addots').innerHTML = ads.length > 1
+    ? ads.map((_, i) => `<i class="${i === adIdx ? 'on' : ''}"></i>`).join('')
+    : '';
+}
+
+function openAd(){
+  const a = ads[adIdx];
+  if (!a) return;
+  clearInterval(adTimer);                 // 보는 동안 안 넘어가게
+  const p = a.page || {};
+  $('sheetWho').textContent = `광고 · ${a.advertiser || ''}`;
+  $('sheetBody').innerHTML =
+    (p.image ? `<img src="${esc(p.image)}" alt="${esc(a.advertiser || '광고')}">` : '') +
+    (p.title ? `<h3>${esc(p.title)}</h3>` : '') +
+    (p.body  ? `<p>${esc(p.body)}</p>` : '') +
+    (p.link  ? `<a class="sheet-cta" href="${esc(p.link)}" target="_blank" rel="noopener">${esc(p.linkLabel || '자세히 보기')}</a>` : '');
+  $('sheet').hidden = false;
+}
+
+function closeAd(){
+  $('sheet').hidden = true;
+  if (ads.length > 1) adTimer = setInterval(() => {
+    adIdx = (adIdx + 1) % ads.length;
+    paintAd();
+  }, rotateMs);
+}
+
+$('adwrap').addEventListener('click', openAd);
+$('sheetClose').addEventListener('click', closeAd);
+$('sheet').addEventListener('click', e => { if (e.target === $('sheet')) closeAd(); });
+
+$('setup').addEventListener('click', () => {
+  const open = $('panel').classList.toggle('open');
+  $('setup').setAttribute('aria-expanded', String(open));
+  $('setup').textContent = open ? '닫기' : '바꾸기';
+});
+
+document.addEventListener('click', e => {
+  const tit = e.target.closest('.tit');
+  if (tit){ toggleItem(tit.closest('.item')); return; }
+
+  const c = e.target.closest('.chip');
+  if (!c) return;
+  const { g, id } = c.dataset;
+  const on = c.getAttribute('aria-pressed') === 'true';
+  c.setAttribute('aria-pressed', String(!on));
+  prefs[g] = on ? prefs[g].filter(x => x !== id) : [...prefs[g], id];
+});
+
+$('country').addEventListener('change', e => {
+  prefs.country = e.target.value;
+  prefs.cities = [];
+  write(); load(); loadAds();
+});
+
+$('done').addEventListener('click', () => {
+  write(); drawBar(); drawFeed();
+  $('panel').classList.remove('open');
+  $('setup').setAttribute('aria-expanded','false');
+  $('setup').textContent = '바꾸기';
+  window.scrollTo({ top:0, behavior:'smooth' });
+});
+
+ticks();
+setInterval(ticks, 20000);
+load();
+loadAds();
+</script>
+</body>
+</html>
