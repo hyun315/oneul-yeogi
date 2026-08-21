@@ -1,0 +1,10 @@
+{
+  "name": "oneul-yeogi",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "오늘 여기 — 해외에 사는 한국인을 위한 현지 소식",
+  "engines": {
+    "node": ">=18"
+  }
+}
