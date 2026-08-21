@@ -136,7 +136,6 @@ select{
 /* ── 소식 ───────────────────────────────── */
 .feed{padding:8px 0 20px}
 .item{
-  display:block;text-decoration:none;color:inherit;
   background:var(--card);border:1px solid var(--line);border-radius:12px;
   padding:16px 17px 14px;margin-top:11px;
 }
@@ -147,19 +146,42 @@ select{
 }
 .head .src{font-weight:600;color:var(--ink)}
 .head .sep{opacity:.35}
-.item h2{
+
+/* 제목이 곧 버튼이다 — 누르면 요약이 펼쳐진다 */
+.tit{
+  display:block;width:100%;text-align:left;cursor:pointer;
+  background:none;border:none;padding:0;margin:9px 0 0;color:inherit;
   font-family:var(--display);font-weight:700;font-size:18.5px;
-  line-height:1.45;margin:9px 0 0;letter-spacing:-.005em;
+  line-height:1.45;letter-spacing:-.005em;
 }
-.item p{font-size:13.5px;color:var(--ink-2);margin:8px 0 0;line-height:1.5}
+.tit::after{
+  content:"";display:inline-block;vertical-align:middle;
+  width:7px;height:7px;margin-left:8px;
+  border-right:1.8px solid var(--ink-2);border-bottom:1.8px solid var(--ink-2);
+  transform:translateY(-3px) rotate(45deg);opacity:.5;
+}
+.item.open .tit::after{transform:translateY(1px) rotate(-135deg);opacity:.8}
+.item.open .tit{color:var(--here)}
 .orig{
-  font-size:12px;color:var(--ink-2);opacity:.62;margin:6px 0 0;line-height:1.45;
+  font-size:12px;color:var(--ink-2);opacity:.62;margin:7px 0 0;line-height:1.45;
   padding-left:9px;border-left:2px solid var(--line);
 }
+.body{
+  margin-top:12px;padding:13px 14px;border-radius:9px;
+  background:rgba(47,143,125,.06);
+  font-size:14.5px;line-height:1.72;white-space:pre-wrap;
+}
+.body.wait{color:var(--ink-2);font-size:13.5px;white-space:normal}
+.body.fail{background:rgba(196,69,62,.07);color:var(--ink-2);font-size:13.5px;white-space:normal}
 .why{
   display:flex;flex-wrap:wrap;align-items:center;gap:6px;
   margin-top:13px;padding-top:12px;border-top:1px solid var(--line);
 }
+.go{
+  margin-left:auto;font-family:var(--mono);font-size:10.5px;font-weight:600;
+  color:var(--ink-2);text-decoration:none;white-space:nowrap;
+}
+.go:active{color:var(--here)}
 .pill{
   font-family:var(--mono);font-size:10px;letter-spacing:.03em;
   padding:3px 8px;border-radius:4px;
@@ -335,9 +357,12 @@ function drawPanel(){
       .map(t => chip(t, prefs.topics.includes(t.id), 'topics')).join('')}</div>`).join('');
 }
 
+const MAX_SHOW = 20;   // 화면에 띄울 최대 건수
+
 function drawFeed(){
   const ranked = items.map(a => ({ ...a, ...rate(a) }))
-    .sort((x,y) => y.s - x.s || new Date(y.published) - new Date(x.published));
+    .sort((x,y) => y.s - x.s || new Date(y.published) - new Date(x.published))
+    .slice(0, MAX_SHOW);
 
   if (!ranked.length){
     $('feed').innerHTML = `<div class="msg"><strong>아직 받아온 소식이 없습니다</strong>
@@ -359,17 +384,18 @@ function drawFeed(){
     if (a.topic) a.topics.filter(t=>prefs.topics.includes(t)).forEach(t => tags.push(`<span class="pill">${nameOf(meta.topics,t)}</span>`));
     if (!tags.length) tags.push(`<span class="pill plain">${meta.name} 주요 소식</span>`);
 
-    const title   = a.ko?.title   || a.title;
-    const snippet = a.ko?.snippet || a.snippet;
+    const title = a.ko?.title || a.title;
+    const showOrig = a.ko && a.ko.title !== a.title;
 
-    html += `<a class="item${a.s>=5?' hit':''}" href="${a.link}" target="_blank" rel="noopener">
+    html += `<article class="item${a.s>=5?' hit':''}" data-link="${encodeURIComponent(a.link)}" data-title="${encodeURIComponent(a.title)}">
       <div class="head"><span class="src">${a.source || '현지 매체'}</span>
         <span class="sep">/</span><span>${ago(a.published)}</span></div>
-      <h2>${title}</h2>
-      ${snippet ? `<p>${snippet}</p>` : ''}
-      ${a.ko ? `<p class="orig">${a.title}</p>` : ''}
-      <div class="why">${tags.join('')}</div>
-    </a>`;
+      <button class="tit" aria-expanded="false">${title}</button>
+      ${showOrig ? `<p class="orig">${a.title}</p>` : ''}
+      <div class="body" hidden></div>
+      <div class="why">${tags.join('')}
+        <a class="go" href="${a.link}" target="_blank" rel="noopener">원문 ↗</a></div>
+    </article>`;
   });
   $('feed').innerHTML = html;
 }
@@ -402,6 +428,42 @@ async function load(){
   }
 }
 
+/* ── 제목을 누르면 요약이 펼쳐진다 ── */
+const summaryCache = new Map();
+
+async function toggleItem(card){
+  const btn  = card.querySelector('.tit');
+  const body = card.querySelector('.body');
+  const open = card.classList.toggle('open');
+  btn.setAttribute('aria-expanded', String(open));
+
+  if (!open){ body.hidden = true; return; }
+  body.hidden = false;
+
+  const link = card.dataset.link;
+  if (summaryCache.has(link)){
+    const c = summaryCache.get(link);
+    body.className = c.ok ? 'body' : 'body fail';
+    body.textContent = c.text;
+    return;
+  }
+
+  body.className = 'body wait';
+  body.textContent = '원문을 읽고 요약하는 중입니다…';
+
+  try {
+    const r = await fetch(`/api/summary?u=${link}&t=${card.dataset.title}`);
+    const d = await r.json();
+    const text = d.ok ? d.summary : (d.message || '요약을 만들지 못했습니다.');
+    summaryCache.set(link, { ok:d.ok, text });
+    body.className = d.ok ? 'body' : 'body fail';
+    body.textContent = text;
+  } catch {
+    body.className = 'body fail';
+    body.textContent = '요약을 불러오지 못했습니다. 원문을 열어 확인해 주세요.';
+  }
+}
+
 $('setup').addEventListener('click', () => {
   const open = $('panel').classList.toggle('open');
   $('setup').setAttribute('aria-expanded', String(open));
@@ -409,6 +471,9 @@ $('setup').addEventListener('click', () => {
 });
 
 document.addEventListener('click', e => {
+  const tit = e.target.closest('.tit');
+  if (tit){ toggleItem(tit.closest('.item')); return; }
+
   const c = e.target.closest('.chip');
   if (!c) return;
   const { g, id } = c.dataset;
