@@ -117,6 +117,37 @@ const TOPIC_LABELS = {
   work:   { label:'산업·투자',   group:'일' },
 };
 
+/* ──────────────────────────────────────────────
+   메이저 언론만 남긴다.
+   구글 뉴스는 군청 홍보실·개인 블로그까지 섞어서 준다.
+   나라별 주요 매체 목록으로 걸러내고, 목록이 너무 빡빡해
+   기사가 모자라면 그때만 나머지로 채운다.
+   ────────────────────────────────────────────── */
+const MAJORS = {
+  ID: ['kompas','detik','tempo','cnnindonesia','cnbcindonesia','kontan','bisnis',
+       'antara','liputan6','tribunnews','jakartapost','katadata','republika',
+       'kumparan','okezone','jawapos','medcom','vivacoid','investorid',
+       'jakartaglobe','beritasatu','sindonews','merdeka','idntimes','tirto'],
+  VN: ['vnexpress','tuoitre','thanhnien','vietnamnet','dantri','vietnamplus',
+       'baotintuc','nguoilaodong','nld','laodong','cafef','vneconomy','tienphong',
+       'saigontimes','vietnamnews','vtv','vov','zingnews','znews'],
+  PH: ['inquirer','gmanetwork','gmanews','abscbn','rappler','philstar',
+       'manilatimes','manilabulletin','mbcomph','bworldonline','businessworld',
+       'pna','sunstar','cnnphilippines','interaksyon'],
+  KH: ['phnompenhpost','khmertimes','cambodianess','freshnews','akp',
+       'vodkhmer','vod','camboja','kirirom'],
+};
+
+const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g,'');
+
+function isMajor(source, code){
+  const s = norm(source);
+  if (!s) return false;
+  return (MAJORS[code] || []).some(m => s.includes(m));
+}
+
+const POOL = 60;   // 클라이언트에 넘길 최대 건수 (화면에는 상위 20건만 뜬다)
+
 const WINDOW = 'when:3d';
 const PER_FEED = 12;
 
@@ -210,7 +241,7 @@ function tagIt(a, c){
      ENABLE_TRANSLATE  = 1        (끄려면 지우거나 0)
      TRANSLATE_MODEL   = claude-haiku-4-5-20251001   (선택)
    ────────────────────────────────────────────── */
-const TRANSLATE_MAX = 48;   // 상위 몇 건까지 번역할지
+const TRANSLATE_MAX = 60;   // 상위 몇 건까지 번역할지 (POOL 전체)
 const BATCH = 16;           // 한 번에 보낼 건수
 
 async function translateBatch(rows, model, key){
@@ -312,8 +343,13 @@ export default async function handler(req, res){
     }
   });
 
-  const collected = [...seen.values()]
+  const all = [...seen.values()]
     .sort((a,b) => new Date(b.published) - new Date(a.published));
+
+  // 메이저 우선. 모자라면 나머지로 채워 피드가 비지 않게 한다.
+  const major = all.filter(a => isMajor(a.source, code)).map(a => ({ ...a, major:true }));
+  const rest  = all.filter(a => !isMajor(a.source, code)).map(a => ({ ...a, major:false }));
+  const collected = (major.length >= 25 ? major : [...major, ...rest]).slice(0, POOL);
 
   const articles = await attachKorean(collected);
   const translated = articles.filter(a => a.ko).length;
@@ -321,6 +357,8 @@ export default async function handler(req, res){
   res.setHeader('Cache-Control','s-maxage=14400, stale-while-revalidate=86400');
   res.status(200).json({
     translated,
+    pool: all.length,
+    major: major.length,
     country: code,
     name: c.name,
     flag: c.flag,
