@@ -77,6 +77,27 @@ header{background:var(--dusk);color:#EFECF5;padding:22px 0 0;overflow:hidden}
   font-family:var(--mono);font-size:10px;color:rgba(239,236,245,.4);
 }
 
+/* 발행 정보 띠 */
+.band{
+  border-top:1px solid rgba(239,236,245,.16);
+  padding:13px 0 17px;
+}
+.stamp{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;
+  color:rgba(239,236,245,.52);
+}
+.blurb{
+  font-size:12.5px;line-height:1.6;color:rgba(239,236,245,.78);
+  margin:6px 0 0;
+}
+.blurb b{color:#7FD9C4;font-weight:600}
+.badge{
+  display:inline-block;margin-left:7px;padding:2px 10px;border-radius:999px;
+  border:1px solid rgba(239,236,245,.28);
+  font-family:var(--mono);font-size:10px;letter-spacing:.02em;
+  color:rgba(239,236,245,.72);white-space:nowrap;
+}
+
 /* ── 조건 줄 ─────────────────────────────── */
 .bar{
   position:sticky;top:0;z-index:20;background:var(--paper);
@@ -233,6 +254,14 @@ footer{font-size:11.5px;color:var(--ink-2);text-align:center;padding:8px 0 0;opa
         <div class="day"  id="homeDay">&nbsp;</div>
         <div class="gap"  id="gap"></div>
       </div>
+    </div>
+
+    <div class="band">
+      <div class="stamp" id="stamp">불러오는 중</div>
+      <p class="blurb">
+        현지 주요 언론에서 고른 <b id="shown">20</b>건 — 사는 곳과 관심사에 맞춰 정렬합니다
+        <span class="badge" id="cycle">매일 갱신</span>
+      </p>
     </div>
   </div>
 </header>
@@ -415,10 +444,20 @@ async function load(){
     write();
 
     const t = new Date(d.collectedAt);
-    const clock = fmt(meta.tz,{hour:'2-digit',minute:'2-digit',hour12:false}).format(t);
+    const stampFmt = fmt(meta.tz, {
+      month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false,
+    });
+    $('stamp').textContent = `마지막 수집 ${stampFmt.format(t)} (현지시각)`;
+
+    const ed = d.edition;
+    if (ed){
+      $('cycle').textContent = `매일 오전 ${ed.hour}시 발행`;
+    }
+    const shown = Math.min(MAX_SHOW, items.length);
+    $('shown').textContent = `${shown}`;
     $('foot').textContent = d.translated
-      ? `${d.count}건 · 한국어 ${d.translated}건 · ${clock} 현지시각 기준 수집`
-      : `${d.count}건 · ${clock} 현지시각 기준 수집`;
+      ? `${d.name} 주요 언론 ${d.major}곳 · 한국어 ${d.translated}건`
+      : `${d.name} 주요 언론 · 원문 표기`;
 
     ticks(); drawBar(); drawPanel(); drawFeed();
   } catch {
