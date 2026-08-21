@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>광고 관리 — 오늘 여기</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+:root{
+  --dusk:#2A2440;--paper:#F2EFF4;--card:#fff;--ink:#221D2E;--ink-2:#6A6480;
+  --here:#2F8F7D;--home:#C4453E;--line:rgba(34,29,46,.13);
+  --body:"Pretendard Variable",Pretendard,-apple-system,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px}
+header{background:var(--dusk);color:#EFECF5;padding:20px 0}
+header h1{font-size:19px;margin:0;font-weight:600}
+header p{margin:5px 0 0;font-size:12.5px;color:rgba(239,236,245,.6)}
+:focus-visible{outline:2px solid var(--here);outline-offset:2px}
+
+.cap{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);display:block;margin-bottom:7px}
+input,textarea,select{
+  width:100%;font-family:var(--body);font-size:15px;color:var(--ink);
+  background:var(--card);border:1px solid var(--line);border-radius:9px;padding:11px 13px;
+}
+textarea{min-height:96px;resize:vertical;line-height:1.6}
+.row{margin-top:15px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{font-family:var(--body);font-size:14px;font-weight:600;cursor:pointer;border-radius:9px;padding:11px 16px;border:1px solid var(--ink);background:transparent;color:var(--ink)}
+button.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.danger{border-color:var(--home);color:var(--home)}
+button.sm{padding:7px 12px;font-size:13px}
+
+.gate{padding:60px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:17px;margin-top:13px}
+.card h3{margin:0;font-size:16px}
+.card .meta{font-family:var(--mono);font-size:11px;color:var(--ink-2);margin-top:4px}
+.card .acts{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
+.thumb{height:40px;border-radius:5px;border:1px solid var(--line);background:#fff;margin-top:10px;display:block}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px}
+.dot.on{background:var(--here)} .dot.off{background:var(--ink-2);opacity:.4}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);font-size:13.5px;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+
+.up{display:flex;gap:8px;align-items:center;margin-top:7px}
+.up input[type=file]{font-size:12.5px;padding:6px}
+.note{font-size:12.5px;color:var(--ink-2);margin-top:8px;line-height:1.55}
+.warn{background:rgba(196,69,62,.08);border:1px solid rgba(196,69,62,.25);border-radius:9px;padding:12px 14px;font-size:13px;margin-top:14px}
+.ok{background:rgba(47,143,125,.1);border:1px solid rgba(47,143,125,.3);border-radius:9px;padding:12px 14px;font-size:13px;margin-top:14px}
+h2{font-size:15px;margin:30px 0 0;padding-top:22px;border-top:1px solid var(--line)}
+.foot{height:60px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>광고 관리</h1>
+    <p>오늘 여기 — 배너와 원페이지 광고물을 등록합니다</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 로그인 -->
+  <section class="gate" id="gate">
+    <span class="cap">관리자 비밀번호</span>
+    <input type="password" id="pw" placeholder="ADMIN_PASSWORD" autocomplete="current-password" />
+    <div class="row"><button class="solid" id="enter">들어가기</button></div>
+    <div id="gateMsg"></div>
+  </section>
+
+  <!-- 본 화면 -->
+  <section id="main" hidden>
+    <div id="storageMsg"></div>
+
+    <h2 style="border:none;padding:0;margin-top:22px">등록된 광고 <span id="count"></span></h2>
+    <div id="list"></div>
+
+    <h2>광고 추가 / 수정</h2>
+    <input type="hidden" id="editId" />
+
+    <div class="row">
+      <span class="cap">광고주 이름</span>
+      <input id="advertiser" placeholder="예: 자카르타 한마음이사" />
+    </div>
+
+    <div class="row">
+      <span class="cap">배너 한 줄 문구</span>
+      <input id="headline" placeholder="예: 이삿짐 포장부터 통관까지 — 한국어 상담" />
+    </div>
+
+    <div class="row">
+      <span class="cap">배너 이미지</span>
+      <input id="banner" placeholder="이미지 주소 (https://...)" />
+      <div class="up">
+        <input type="file" id="bannerFile" accept="image/*" />
+        <button class="sm" data-up="banner">올리기</button>
+      </div>
+      <p class="note">가로로 긴 형태를 권합니다. 높이 44px로 표시되니 세로로 긴 이미지는 잘려 보입니다.</p>
+    </div>
+
+    <h2>원페이지 광고물 — 배너를 누르면 펼쳐집니다</h2>
+
+    <div class="row">
+      <span class="cap">전면 이미지</span>
+      <input id="pageImage" placeholder="이미지 주소 (https://...)" />
+      <div class="up">
+        <input type="file" id="pageFile" accept="image/*" />
+        <button class="sm" data-up="pageImage">올리기</button>
+      </div>
+      <p class="note">광고주가 만들어 보낸 홍보 이미지를 그대로 올리시면 됩니다. 폭에 맞춰 표시됩니다.</p>
+    </div>
+
+    <div class="row">
+      <span class="cap">제목</span>
+      <input id="pageTitle" placeholder="예: 8월 이사 예약 시 포장비 무료" />
+    </div>
+
+    <div class="row">
+      <span class="cap">본문</span>
+      <textarea id="pageBody" placeholder="광고주가 보낸 소개 문구를 넣으세요. 줄바꿈은 그대로 유지됩니다."></textarea>
+    </div>
+
+    <div class="row two">
+      <div>
+        <span class="cap">연결 주소</span>
+        <input id="pageLink" placeholder="https:// 또는 카카오톡 오픈채팅 주소" />
+      </div>
+      <div>
+        <span class="cap">버튼 문구</span>
+        <input id="pageLinkLabel" placeholder="카카오톡 문의" />
+      </div>
+    </div>
+
+    <h2>노출 조건</h2>
+
+    <div class="row">
+      <span class="cap">노출 국가 — 고르지 않으면 모든 국가</span>
+      <div class="chips" id="countries"></div>
+    </div>
+
+    <div class="row two">
+      <div><span class="cap">시작일</span><input type="date" id="from" /></div>
+      <div><span class="cap">종료일</span><input type="date" id="to" /></div>
+    </div>
+
+    <div class="row">
+      <span class="cap">상태</span>
+      <div class="chips">
+        <button class="chip" id="active" aria-pressed="true">노출 중</button>
+      </div>
+    </div>
+
+    <div class="row two" style="margin-top:22px">
+      <button class="solid" id="save">저장</button>
+      <button id="reset">입력 비우기</button>
+    </div>
+
+    <h2>배너 넘김 간격</h2>
+    <div class="row two">
+      <div>
+        <span class="cap">밀리초 (3000 = 3초)</span>
+        <input type="number" id="rotate" value="3000" min="1500" step="500" />
+      </div>
+      <div style="display:flex;align-items:flex-end"><button id="saveRotate">간격 저장</button></div>
+    </div>
+
+    <div id="msg"></div>
+    <div class="foot"></div>
+  </section>
+</div>
+
+<script>
+const COUNTRIES = [
+  { code:'ID', name:'인도네시아' },
+  { code:'VN', name:'베트남' },
+  { code:'PH', name:'필리핀' },
+  { code:'KH', name:'캄보디아' },
+];
+const $ = id => document.getElementById(id);
+let key = sessionStorage.getItem('oy.admin') || '';
+let ads = [], rotateMs = 3000, writable = false;
+
+const api = (path, opt = {}) => fetch(path, {
+  ...opt,
+  headers:{ ...(opt.headers || {}), 'x-admin-key':key },
+});
+
+function note(el, text, kind = 'ok'){
+  el.innerHTML = `<div class="${kind}">${text}</div>`;
+  if (kind === 'ok') setTimeout(() => { el.innerHTML = ''; }, 3500);
+}
+
+async function enter(){
+  key = $('pw').value.trim();
+  if (!key) return;
+  const r = await api('/api/ads?all=1');
+  if (!r.ok){
+    note($('gateMsg'), '비밀번호가 맞지 않습니다. Vercel의 ADMIN_PASSWORD 값을 확인해 주세요.', 'warn');
+    return;
+  }
+  sessionStorage.setItem('oy.admin', key);
+  const d = await r.json();
+  ads = d.ads || [];
+  writable = d.writable;
+  $('gate').hidden = true;
+  $('main').hidden = false;
+
+  if (!d.configured){
+    note($('storageMsg'),
+      'Blob 저장소가 연결되지 않아 <b>읽기 전용</b>입니다.<br>Vercel → Storage → Create → Blob 을 만들면 저장이 켜집니다.',
+      'warn');
+  }
+  drawCountries();
+  drawList();
+}
+
+function drawCountries(sel = []){
+  $('countries').innerHTML = COUNTRIES.map(c =>
+    `<button class="chip" data-c="${c.code}" aria-pressed="${sel.includes(c.code)}">${c.name}</button>`).join('');
+}
+
+function drawList(){
+  $('count').textContent = `(${ads.length})`;
+  if (!ads.length){
+    $('list').innerHTML = '<p class="note">아직 등록된 광고가 없습니다.</p>';
+    return;
+  }
+  $('list').innerHTML = ads.map((a, i) => `
+    <div class="card">
+      <h3><span class="dot ${a.active ? 'on' : 'off'}"></span>${a.advertiser || '(이름 없음)'}</h3>
+      <div class="meta">${(a.countries?.length ? a.countries.join(', ') : '전체 국가')}
+        · ${a.from || '시작 제한 없음'} ~ ${a.to || '종료 제한 없음'}</div>
+      ${a.banner ? `<img class="thumb" src="${a.banner}" alt="">` : ''}
+      <div class="acts">
+        <button class="sm" data-edit="${i}">수정</button>
+        <button class="sm" data-toggle="${i}">${a.active ? '내리기' : '올리기'}</button>
+        <button class="sm danger" data-del="${i}">삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+function fill(a){
+  $('editId').value      = a?.id || '';
+  $('advertiser').value  = a?.advertiser || '';
+  $('headline').value    = a?.headline || '';
+  $('banner').value      = a?.banner || '';
+  $('pageImage').value   = a?.page?.image || '';
+  $('pageTitle').value   = a?.page?.title || '';
+  $('pageBody').value    = a?.page?.body || '';
+  $('pageLink').value    = a?.page?.link || '';
+  $('pageLinkLabel').value = a?.page?.linkLabel || '';
+  $('from').value        = a?.from || '';
+  $('to').value          = a?.to || '';
+  $('active').setAttribute('aria-pressed', String(a ? !!a.active : true));
+  drawCountries(a?.countries || []);
+  window.scrollTo({ top:document.body.scrollHeight * .35, behavior:'smooth' });
+}
+
+async function persist(){
+  const r = await api('/api/ads', {
+    method:'POST',
+    headers:{ 'content-type':'application/json' },
+    body: JSON.stringify({ ads, rotateMs }),
+  });
+  const d = await r.json();
+  if (!r.ok){ note($('msg'), d.error || '저장에 실패했습니다', 'warn'); return false; }
+  return true;
+}
+
+$('enter').addEventListener('click', enter);
+$('pw').addEventListener('keydown', e => { if (e.key === 'Enter') enter(); });
+
+$('active').addEventListener('click', e => {
+  const on = e.target.getAttribute('aria-pressed') === 'true';
+  e.target.setAttribute('aria-pressed', String(!on));
+});
+
+$('countries').addEventListener('click', e => {
+  const c = e.target.closest('[data-c]');
+  if (!c) return;
+  const on = c.getAttribute('aria-pressed') === 'true';
+  c.setAttribute('aria-pressed', String(!on));
+});
+
+$('list').addEventListener('click', async e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.edit  != null) fill(ads[+b.dataset.edit]);
+  if (b.dataset.toggle != null){
+    ads[+b.dataset.toggle].active = !ads[+b.dataset.toggle].active;
+    if (await persist()) drawList();
+  }
+  if (b.dataset.del != null){
+    if (!confirm(`${ads[+b.dataset.del].advertiser || '이 광고'} 를 삭제할까요?`)) return;
+    ads.splice(+b.dataset.del, 1);
+    if (await persist()) drawList();
+  }
+});
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-up]');
+  if (!b) return;
+  const field = b.dataset.up;
+  const input = field === 'banner' ? $('bannerFile') : $('pageFile');
+  const f = input.files?.[0];
+  if (!f){ note($('msg'), '파일을 먼저 고르세요', 'warn'); return; }
+  b.disabled = true; b.textContent = '올리는 중';
+  try {
+    const r = await api(`/api/upload?name=${encodeURIComponent(f.name)}`, {
+      method:'POST', headers:{ 'content-type':f.type }, body:f,
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || '실패');
+    $(field).value = d.url;
+    note($('msg'), '이미지를 올렸습니다');
+  } catch (err) {
+    note($('msg'), err.message, 'warn');
+  } finally {
+    b.disabled = false; b.textContent = '올리기';
+  }
+});
+
+$('save').addEventListener('click', async () => {
+  const picked = [...$('countries').querySelectorAll('[aria-pressed="true"]')].map(x => x.dataset.c);
+  const rec = {
+    id: $('editId').value || `ad_${Date.now()}`,
+    advertiser: $('advertiser').value.trim(),
+    headline:   $('headline').value.trim(),
+    banner:     $('banner').value.trim(),
+    countries:  picked,
+    from:       $('from').value || '',
+    to:         $('to').value || '',
+    active:     $('active').getAttribute('aria-pressed') === 'true',
+    page:{
+      image:     $('pageImage').value.trim(),
+      title:     $('pageTitle').value.trim(),
+      body:      $('pageBody').value,
+      link:      $('pageLink').value.trim(),
+      linkLabel: $('pageLinkLabel').value.trim(),
+    },
+  };
+  if (!rec.advertiser){ note($('msg'), '광고주 이름을 넣어 주세요', 'warn'); return; }
+  if (!rec.banner && !rec.headline){ note($('msg'), '배너 이미지나 문구 중 하나는 있어야 합니다', 'warn'); return; }
+
+  const at = ads.findIndex(a => a.id === rec.id);
+  if (at >= 0) ads[at] = rec; else ads.push(rec);
+
+  if (await persist()){
+    note($('msg'), '저장했습니다');
+    drawList(); fill(null);
+  }
+});
+
+$('reset').addEventListener('click', () => fill(null));
+
+$('saveRotate').addEventListener('click', async () => {
+  rotateMs = Math.max(1500, Number($('rotate').value) || 3000);
+  if (await persist()) note($('msg'), `${rotateMs / 1000}초마다 넘어가도록 저장했습니다`);
+});
+
+if (key) enter();
+</script>
+</body>
+</html>

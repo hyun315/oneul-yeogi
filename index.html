@@ -31,7 +31,13 @@ body{
   background:var(--paper);color:var(--ink);
   font-family:var(--body);font-size:16px;line-height:1.55;
   -webkit-font-smoothing:antialiased;
-  padding-bottom:calc(40px + env(safe-area-inset-bottom));
+  /* 위는 고정, 아래(뉴스)만 스크롤 */
+  height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+}
+.top{flex:none}
+.scroller{
+  flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-bottom:calc(28px + env(safe-area-inset-bottom));
 }
 .wrap{max-width:700px;margin:0 auto;padding:0 18px}
 :focus-visible{outline:2px solid var(--here);outline-offset:3px;border-radius:5px}
@@ -100,7 +106,7 @@ header{background:var(--dusk);color:#EFECF5;padding:22px 0 0;overflow:hidden}
 
 /* ── 조건 줄 ─────────────────────────────── */
 .bar{
-  position:sticky;top:0;z-index:20;background:var(--paper);
+  background:var(--paper);
   border-bottom:1px solid var(--line);
 }
 .bar-in{display:flex;align-items:center;gap:12px;padding:11px 0}
@@ -155,6 +161,81 @@ select{
 }
 
 /* ── 소식 ───────────────────────────────── */
+/* ── 광고 ─────────────────────────────── */
+.adrail{
+  background:var(--dusk-2);
+  border-top:1px solid rgba(239,236,245,.1);
+}
+.adrail[hidden]{display:none}
+.adwrap{
+  position:relative;display:flex;align-items:center;gap:12px;
+  padding:9px 0;cursor:pointer;
+}
+.adslot{
+  flex:1;min-width:0;display:flex;align-items:center;gap:11px;
+}
+.adslot img{
+  height:44px;width:auto;max-width:120px;object-fit:contain;
+  border-radius:6px;background:rgba(255,255,255,.9);flex:none;
+}
+.adtext{min-width:0}
+.adtext .who{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(239,236,245,.42);
+}
+.adtext .line{
+  font-size:13.5px;font-weight:600;color:#EFECF5;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.adgo{
+  flex:none;font-family:var(--mono);font-size:10px;font-weight:600;
+  color:rgba(239,236,245,.7);border:1px solid rgba(239,236,245,.3);
+  padding:5px 11px;border-radius:999px;white-space:nowrap;
+}
+.addots{display:flex;gap:4px;position:absolute;right:0;bottom:2px}
+.addots i{width:4px;height:4px;border-radius:50%;background:rgba(239,236,245,.25)}
+.addots i.on{background:var(--here)}
+@media (prefers-reduced-motion:no-preference){
+  .adslot{animation:fadein .45s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+}
+
+/* 배너를 누르면 광고주가 준 원페이지가 펼쳐진다 */
+.sheet{
+  position:fixed;inset:0;z-index:60;background:rgba(34,29,46,.55);
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.sheet[hidden]{display:none}
+.sheet-in{
+  background:var(--card);width:100%;max-width:700px;
+  max-height:92dvh;overflow-y:auto;
+  border-radius:16px 16px 0 0;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom));
+}
+.sheet-bar{
+  position:sticky;top:0;background:var(--card);z-index:2;
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px;border-bottom:1px solid var(--line);
+}
+.sheet-bar .who{
+  flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);
+}
+.sheet-bar button{
+  border:none;background:rgba(34,29,46,.06);color:var(--ink);
+  width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;
+  font-family:var(--body);line-height:1;
+}
+.sheet-body{padding:18px}
+.sheet-body img{width:100%;height:auto;border-radius:10px;display:block}
+.sheet-body h3{font-family:var(--display);font-size:21px;margin:16px 0 0;font-weight:700}
+.sheet-body p{font-size:14.5px;line-height:1.72;color:var(--ink-2);margin:10px 0 0;white-space:pre-wrap}
+.sheet-cta{
+  display:block;text-align:center;margin-top:20px;padding:15px;
+  background:var(--ink);color:#fff;border-radius:10px;
+  text-decoration:none;font-size:15px;font-weight:600;
+}
+
 .feed{padding:8px 0 20px}
 .item{
   background:var(--card);border:1px solid var(--line);border-radius:12px;
@@ -234,6 +315,7 @@ footer{font-size:11.5px;color:var(--ink-2);text-align:center;padding:8px 0 0;opa
 </head>
 <body>
 
+<div class="top">
 <header>
   <div class="wrap">
     <div class="mark">
@@ -266,6 +348,14 @@ footer{font-size:11.5px;color:var(--ink-2);text-align:center;padding:8px 0 0;opa
   </div>
 </header>
 
+<div class="adrail" id="adrail" hidden>
+  <div class="wrap adwrap" id="adwrap">
+    <div class="adslot" id="adslot"></div>
+    <span class="adgo">자세히</span>
+    <div class="addots" id="addots"></div>
+  </div>
+</div>
+
 <div class="bar">
   <div class="wrap bar-in">
     <div class="cond">
@@ -275,7 +365,9 @@ footer{font-size:11.5px;color:var(--ink-2);text-align:center;padding:8px 0 0;opa
     <button class="setup" id="setup" aria-expanded="false">바꾸기</button>
   </div>
 </div>
+</div>
 
+<div class="scroller">
 <div class="wrap">
   <section class="panel" id="panel">
     <div class="field">
@@ -302,6 +394,17 @@ footer{font-size:11.5px;color:var(--ink-2);text-align:center;padding:8px 0 0;opa
   </main>
 
   <footer id="foot"></footer>
+</div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-in">
+    <div class="sheet-bar">
+      <span class="who" id="sheetWho">광고</span>
+      <button id="sheetClose" aria-label="닫기">✕</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
 </div>
 
 <script>
@@ -503,6 +606,67 @@ async function toggleItem(card){
   }
 }
 
+/* ── 광고 ── */
+let ads = [], adIdx = 0, adTimer = null, rotateMs = 3000;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function loadAds(){
+  clearInterval(adTimer);
+  try {
+    const r = await fetch(`/api/ads?country=${prefs.country}`);
+    const d = await r.json();
+    ads = Array.isArray(d.ads) ? d.ads : [];
+    rotateMs = Number(d.rotateMs) || 3000;
+  } catch { ads = []; }
+
+  if (!ads.length){ $('adrail').hidden = true; return; }
+  $('adrail').hidden = false;
+  adIdx = 0;
+  paintAd();
+  if (ads.length > 1) adTimer = setInterval(() => {
+    adIdx = (adIdx + 1) % ads.length;
+    paintAd();
+  }, rotateMs);
+}
+
+function paintAd(){
+  const a = ads[adIdx];
+  if (!a) return;
+  $('adslot').innerHTML =
+    (a.banner ? `<img src="${esc(a.banner)}" alt="${esc(a.advertiser || '광고')}">` : '') +
+    `<div class="adtext">
+       <div class="who">광고 · ${esc(a.advertiser || '')}</div>
+       <div class="line">${esc(a.headline || a.alt || '')}</div>
+     </div>`;
+  $('addots').innerHTML = ads.map((_, i) => `<i class="${i === adIdx ? 'on' : ''}"></i>`).join('');
+}
+
+function openAd(){
+  const a = ads[adIdx];
+  if (!a) return;
+  clearInterval(adTimer);                 // 보는 동안 안 넘어가게
+  const p = a.page || {};
+  $('sheetWho').textContent = `광고 · ${a.advertiser || ''}`;
+  $('sheetBody').innerHTML =
+    (p.image ? `<img src="${esc(p.image)}" alt="${esc(a.advertiser || '광고')}">` : '') +
+    (p.title ? `<h3>${esc(p.title)}</h3>` : '') +
+    (p.body  ? `<p>${esc(p.body)}</p>` : '') +
+    (p.link  ? `<a class="sheet-cta" href="${esc(p.link)}" target="_blank" rel="noopener">${esc(p.linkLabel || '자세히 보기')}</a>` : '');
+  $('sheet').hidden = false;
+}
+
+function closeAd(){
+  $('sheet').hidden = true;
+  if (ads.length > 1) adTimer = setInterval(() => {
+    adIdx = (adIdx + 1) % ads.length;
+    paintAd();
+  }, rotateMs);
+}
+
+$('adwrap').addEventListener('click', openAd);
+$('sheetClose').addEventListener('click', closeAd);
+$('sheet').addEventListener('click', e => { if (e.target === $('sheet')) closeAd(); });
+
 $('setup').addEventListener('click', () => {
   const open = $('panel').classList.toggle('open');
   $('setup').setAttribute('aria-expanded', String(open));
@@ -524,7 +688,7 @@ document.addEventListener('click', e => {
 $('country').addEventListener('change', e => {
   prefs.country = e.target.value;
   prefs.cities = [];
-  write(); load();
+  write(); load(); loadAds();
 });
 
 $('done').addEventListener('click', () => {
@@ -538,6 +702,7 @@ $('done').addEventListener('click', () => {
 ticks();
 setInterval(ticks, 20000);
 load();
+loadAds();
 </script>
 </body>
 </html>
