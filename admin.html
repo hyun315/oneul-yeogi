@@ -44,6 +44,10 @@ button.sm{padding:7px 12px;font-size:13px}
 .thumb{height:40px;border-radius:5px;border:1px solid var(--line);background:#fff;margin-top:10px;display:block}
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px}
 .dot.on{background:var(--here)} .dot.off{background:var(--ink-2);opacity:.4}
+.miss{
+  margin-top:10px;padding:8px 11px;border-radius:7px;font-size:12.5px;
+  background:rgba(196,69,62,.08);border:1px solid rgba(196,69,62,.25);color:var(--home);
+}
 
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);font-size:13.5px;font-weight:500}
@@ -104,7 +108,8 @@ h2{font-size:15px;margin:30px 0 0;padding-top:22px;border-top:1px solid var(--li
         <input type="file" id="bannerFile" accept="image/*" />
         <button class="sm" data-up="banner">올리기</button>
       </div>
-      <p class="note">가로로 긴 형태를 권합니다. 높이 44px로 표시되니 세로로 긴 이미지는 잘려 보입니다.</p>
+      <p class="note">가로로 긴 형태를 권합니다 (1200 × 250px 안팎). 이미지를 고른 뒤 <b>올리기</b>를 누르면 위 칸에 주소가 채워지고,
+      그다음 맨 아래 <b>저장</b>까지 눌러야 앱에 반영됩니다.</p>
     </div>
 
     <h2>원페이지 광고물 — 배너를 누르면 펼쳐집니다</h2>
@@ -239,7 +244,9 @@ function drawList(){
       <h3><span class="dot ${a.active ? 'on' : 'off'}"></span>${a.advertiser || '(이름 없음)'}</h3>
       <div class="meta">${(a.countries?.length ? a.countries.join(', ') : '전체 국가')}
         · ${a.from || '시작 제한 없음'} ~ ${a.to || '종료 제한 없음'}</div>
-      ${a.banner ? `<img class="thumb" src="${a.banner}" alt="">` : ''}
+      ${a.banner
+        ? `<img class="thumb" src="${a.banner}" alt="">`
+        : `<div class="miss">배너 이미지가 없습니다 — 문구만 표시됩니다</div>`}
       <div class="acts">
         <button class="sm" data-edit="${i}">수정</button>
         <button class="sm" data-toggle="${i}">${a.active ? '내리기' : '올리기'}</button>
@@ -321,7 +328,7 @@ document.addEventListener('click', async e => {
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || '실패');
     $(field).value = d.url;
-    note($('msg'), '이미지를 올렸습니다');
+    note($('msg'), '이미지를 올렸습니다 — 아래 <b>저장</b>을 눌러야 반영됩니다');
   } catch (err) {
     note($('msg'), err.message, 'warn');
   } finally {
