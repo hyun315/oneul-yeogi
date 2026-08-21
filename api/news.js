@@ -127,18 +127,41 @@ function feedUrl(c, q){
     : `https://news.google.com/rss?${tail}`;
 }
 
-function decode(s=''){
+function unescape(s){
   return s
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1')
     .replace(/&lt;/g,'<').replace(/&gt;/g,'>')
     .replace(/&quot;/g,'"').replace(/&#39;/g,"'")
-    .replace(/&nbsp;/g,' ').replace(/&amp;/g,'&')
-    .replace(/<[^>]+>/g,'').trim();
+    .replace(/&nbsp;/g,' ')
+    .replace(/&#(\d+);/g, (_,n) => String.fromCharCode(+n))
+    .replace(/&amp;/g,'&');
+}
+
+function decode(s=''){
+  // 구글 RSS는 엔티티를 이중 인코딩해 보낸다 (&amp;nbsp;).
+  // 한 번만 풀면 &nbsp; 가 그대로 남으므로 두 번 돌린다.
+  let out = unescape(unescape(s));
+  return out.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
 }
 
 function pick(block, tag){
   const m = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`,'i'));
   return m ? decode(m[1]) : '';
+}
+
+// 구글 RSS의 description은 대개 "제목 + 매체명"의 반복이다.
+// 그대로 두면 번역 비용이 두 배로 들고 화면에도 같은 문장이 두 줄 나온다.
+function usefulSnippet(desc, title, source){
+  if (!desc) return '';
+  let s = desc;
+  if (source) s = s.split(source)[0];                 // 꼬리의 매체명 제거
+  s = s.replace(/\s+/g,' ').trim();
+  const norm = x => x.toLowerCase().replace(/[^a-z0-9가-힣]/g,'');
+  const a = norm(s), b = norm(title);
+  if (!a) return '';
+  if (a === b || b.startsWith(a) || a.startsWith(b)) return '';  // 제목 반복
+  if (a.length < 40) return '';                       // 너무 짧으면 의미 없음
+  return s.slice(0, 200);
 }
 
 function parseRss(xml){
@@ -147,12 +170,14 @@ function parseRss(xml){
     const raw = pick(block,'title');
     if (!raw) continue;
     const cut = raw.lastIndexOf(' - ');           // "제목 - 매체"
+    const title  = cut > 20 ? raw.slice(0, cut) : raw;
+    const source = pick(block,'source') || (cut > 20 ? raw.slice(cut + 3) : '');
     out.push({
-      title:   cut > 20 ? raw.slice(0, cut) : raw,
-      source:  pick(block,'source') || (cut > 20 ? raw.slice(cut + 3) : ''),
-      link:    pick(block,'link'),
+      title,
+      source,
+      link:      pick(block,'link'),
       published: pick(block,'pubDate'),
-      snippet: pick(block,'description').slice(0, 200),
+      snippet:   usefulSnippet(pick(block,'description'), title, source),
     });
   }
   return out;
