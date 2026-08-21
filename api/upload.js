@@ -6,10 +6,7 @@
 //  POST /api/upload?name=banner.jpg   (본문: 이미지 바이트)
 //  헤더: x-admin-key, content-type
 
-export const config = {
-  maxDuration: 30,
-  api: { bodyParser: { sizeLimit: '8mb' } },
-};
+export const config = { maxDuration: 30 };
 
 const BLOB_API = 'https://blob.vercel-storage.com';
 
