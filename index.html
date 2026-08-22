@@ -168,21 +168,22 @@ select{
   position:relative;cursor:pointer;padding:0;
   display:block;
 }
-/* 자리 자체를 고정 높이로 둔다 — 배너마다 비율이 달라도
-   이 높이 안에서만 커지고 작아져서, 아래 조건바·뉴스가 밀리지 않는다 */
+/* 자리를 고정 높이(px)가 아니라 권장 배너 비율(1200:250)로 둔다.
+   화면 폭이 좁든 넓든 그 비율대로 높이가 정해지므로,
+   규격에 맞춘 배너는 여백 없이 꽉 차고, 화면이 바뀔 때도 밀리지 않는다. */
 .adslot{
-  height:150px;display:flex;align-items:center;justify-content:center;
+  width:100%;aspect-ratio:1200/250;
+  display:flex;align-items:center;justify-content:center;
   overflow:hidden;
 }
 .adslot img{
-  display:block;max-width:100%;max-height:100%;width:auto;height:auto;
-  object-fit:contain;
+  display:block;width:100%;height:100%;object-fit:contain;
 }
-/* 이미지가 없을 때만 문구로 대신한다 — 같은 높이를 채운다 */
+/* 이미지가 없을 때만 문구로 대신한다 — 같은 자리를 채운다 */
 .adslot .fallback{
   display:flex;align-items:center;justify-content:center;
   width:100%;height:100%;padding:0 18px;text-align:center;
-  line-height:1.5;font-size:14px;font-weight:600;color:#EFECF5;
+  line-height:1.4;font-size:13px;font-weight:600;color:#EFECF5;
 }
 .adtag{
   position:absolute;left:0;top:0;
