@@ -112,7 +112,39 @@ function extractText(html){
   return text.length > 200 ? text.slice(0, BODY_LIMIT) : '';
 }
 
-async function summarize(text, title, key, model){
+// 이 네 주제는 "무슨 일이 있었는지"보다 "내가 뭘 확인해야 하는지"가 더 중요하다.
+// 이때만 확인 포인트를 추가로 요청한다 — 결과를 단정하지 않고, 확인할 곳을 안내하는 선까지만.
+const CHECK_TOPICS = new Set(['visa', 'rule', 'gov', 'embassy']);
+
+async function summarize(text, title, key, model, wantsCheckpoint){
+  const system = wantsCheckpoint
+    ? '너는 해외에 사는 한국인을 위한 뉴스 앱의 요약가다. 현지 기사를 한국어로 요약한다.\n' +
+      '규칙:\n' +
+      '- summary는 3~5문장. 각 문장은 완결된 사실 한 가지씩.\n' +
+      '- 그곳에 사는 한국인 입장에서 알아야 할 것을 앞에 둔다 ' +
+      '(언제부터, 어디가, 얼마가, 무엇이 달라지는지).\n' +
+      '- 기자 논평이나 배경 설명보다 사실과 숫자를 우선한다.\n' +
+      '- 지명·기관명은 한국 언론 표기를 따른다 (Jakarta→자카르타, Bekasi→브카시).\n' +
+      '- 현지 제도·용어는 한국어 뒤 괄호로 원어를 남긴다 (예: 체류허가(KITAS)).\n' +
+      '- 이 기사는 비자·체류, 세금·제도, 정부/대사관 공지 중 하나다. checkpoint에는 ' +
+      '"이 사람이 무엇을 확인해야 하는지"를 1~2문장으로 안내한다.\n' +
+      '  * 이 사람에게 해당되는지, 결과가 어떻게 될지 단정하지 않는다 ' +
+      '("문제없습니다", "괜찮습니다" 같은 말은 쓰지 않는다).\n' +
+      '  * 확인이 필요하면 어디서 확인해야 하는지 알려준다 (이민청, 세무서, 대사관 영사과 등).\n' +
+      '  * 이 기사가 개인의 확인이 필요한 내용이 아니면(단순 동정·행사 소식 등) checkpoint를 빈 문자열로 둔다.\n' +
+      '- 본문이 기사 내용이 아니라 광고·안내문뿐이면 정확히 이렇게만 답한다: {"summary":"NO_CONTENT","checkpoint":""}\n' +
+      '- 다른 설명, 마크다운 코드펜스 없이 JSON 객체 하나만 출력한다: {"summary":"...","checkpoint":"..."}'
+    : '너는 해외에 사는 한국인을 위한 뉴스 앱의 요약가다. 현지 기사를 한국어로 요약한다.\n' +
+      '규칙:\n' +
+      '- 3~5문장. 각 문장은 완결된 사실 한 가지씩.\n' +
+      '- 그곳에 사는 한국인 입장에서 알아야 할 것을 앞에 둔다 ' +
+      '(언제부터, 어디가, 얼마가, 무엇이 달라지는지).\n' +
+      '- 기자 논평이나 배경 설명보다 사실과 숫자를 우선한다.\n' +
+      '- 지명·기관명은 한국 언론 표기를 따른다 (Jakarta→자카르타, Bekasi→브카시).\n' +
+      '- 현지 제도·용어는 한국어 뒤 괄호로 원어를 남긴다 (예: 체류허가(KITAS)).\n' +
+      '- 본문이 기사 내용이 아니라 광고·안내문뿐이면 정확히 이렇게만 답한다: NO_CONTENT\n' +
+      '- 머리말이나 "요약:" 같은 표시 없이 요약문만 출력한다.';
+
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method:'POST',
     headers:{
@@ -123,28 +155,31 @@ async function summarize(text, title, key, model){
     body: JSON.stringify({
       model,
       max_tokens: 700,
-      system:
-        '너는 해외에 사는 한국인을 위한 뉴스 앱의 요약가다. 현지 기사를 한국어로 요약한다.\n' +
-        '규칙:\n' +
-        '- 3~5문장. 각 문장은 완결된 사실 한 가지씩.\n' +
-        '- 그곳에 사는 한국인 입장에서 알아야 할 것을 앞에 둔다 ' +
-        '(언제부터, 어디가, 얼마가, 무엇이 달라지는지).\n' +
-        '- 기자 논평이나 배경 설명보다 사실과 숫자를 우선한다.\n' +
-        '- 지명·기관명은 한국 언론 표기를 따른다 (Jakarta→자카르타, Bekasi→브카시).\n' +
-        '- 현지 제도·용어는 한국어 뒤 괄호로 원어를 남긴다 (예: 체류허가(KITAS)).\n' +
-        '- 본문이 기사 내용이 아니라 광고·안내문뿐이면 정확히 이렇게만 답한다: NO_CONTENT\n' +
-        '- 머리말이나 "요약:" 같은 표시 없이 요약문만 출력한다.',
+      system,
       messages: [{ role:'user', content:`제목: ${title || '(없음)'}\n\n본문:\n${text}` }],
     }),
   });
   if (!r.ok) throw new Error(`anthropic ${r.status}`);
   const d = await r.json();
-  return (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+  const raw = (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+
+  if (!wantsCheckpoint) return { summary: raw, checkpoint: '' };
+
+  try {
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    return { summary: String(parsed.summary || ''), checkpoint: String(parsed.checkpoint || '') };
+  } catch {
+    // JSON이 깨져 나오면 checkpoint 없이 원문 텍스트라도 살린다
+    return { summary: raw, checkpoint: '' };
+  }
 }
 
 export default async function handler(req, res){
-  const raw   = req.query.u;
-  const title = req.query.t || '';
+  const raw    = req.query.u;
+  const title  = req.query.t || '';
+  const topics = String(req.query.topics || '').split(',').map(t => t.trim()).filter(Boolean);
+  const wantsCheckpoint = topics.some(t => CHECK_TOPICS.has(t));
 
   if (!raw){
     res.status(400).json({ error:'주소가 없습니다' });
@@ -188,9 +223,9 @@ export default async function handler(req, res){
     }
 
     const model = process.env.TRANSLATE_MODEL || 'claude-haiku-4-5-20251001';
-    const out = await summarize(text, title, key, model);
+    const out = await summarize(text, title, key, model, wantsCheckpoint);
 
-    if (!out || out.includes('NO_CONTENT')){
+    if (!out.summary || out.summary.includes('NO_CONTENT')){
       res.setHeader('Cache-Control','s-maxage=3600');
       res.status(200).json({
         ok:false, reason:'noText', source:url,
@@ -201,7 +236,7 @@ export default async function handler(req, res){
 
     // 기사 본문은 잘 안 바뀐다. URL 단위로 24시간 캐시.
     res.setHeader('Cache-Control','s-maxage=86400, stale-while-revalidate=604800');
-    res.status(200).json({ ok:true, summary:out, source:url });
+    res.status(200).json({ ok:true, summary:out.summary, checkpoint:out.checkpoint, source:url });
 
   } catch (e) {
     console.error('summary failed:', e.message);
