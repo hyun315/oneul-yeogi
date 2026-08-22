@@ -97,7 +97,7 @@ export default async function handler(req, res){
       if (req.query.all === '1'){
         if (!authed(req)){ res.status(401).json({ error:'권한이 없습니다' }); return; }
         res.setHeader('Cache-Control','no-store');
-        res.status(200).json({ ads:all, writable, configured:!!token() });
+        res.status(200).json({ ads:all, rotateMs: Number(data.rotateMs) || 3000, writable, configured:!!token() });
         return;
       }
 
