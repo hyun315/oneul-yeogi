@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>광고 관리 — 오늘 여기</title>
 <meta name="robots" content="noindex, nofollow" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
 <style>
@@ -17,48 +16,80 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
-.wrap{max-width:760px;margin:0 auto;padding:0 18px}
+.wrap{max-width:640px;margin:0 auto;padding:0 18px}
 header{background:var(--dusk);color:#EFECF5;padding:20px 0}
 header h1{font-size:19px;margin:0;font-weight:600}
 header p{margin:5px 0 0;font-size:12.5px;color:rgba(239,236,245,.6)}
 :focus-visible{outline:2px solid var(--here);outline-offset:2px}
 
 .cap{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);display:block;margin-bottom:7px}
-input,textarea,select{
+input,textarea{
   width:100%;font-family:var(--body);font-size:15px;color:var(--ink);
   background:var(--card);border:1px solid var(--line);border-radius:9px;padding:11px 13px;
 }
-textarea{min-height:96px;resize:vertical;line-height:1.6}
+textarea{min-height:80px;resize:vertical;line-height:1.6}
 .row{margin-top:15px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 button{font-family:var(--body);font-size:14px;font-weight:600;cursor:pointer;border-radius:9px;padding:11px 16px;border:1px solid var(--ink);background:transparent;color:var(--ink)}
 button.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
 button.danger{border-color:var(--home);color:var(--home)}
 button.sm{padding:7px 12px;font-size:13px}
+button:disabled{opacity:.4;cursor:default}
 
 .gate{padding:60px 0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:17px;margin-top:13px}
 .card h3{margin:0;font-size:16px}
 .card .meta{font-family:var(--mono);font-size:11px;color:var(--ink-2);margin-top:4px}
 .card .acts{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
-.thumb{height:40px;border-radius:5px;border:1px solid var(--line);background:#fff;margin-top:10px;display:block}
-.dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px}
-.dot.on{background:var(--here)} .dot.off{background:var(--ink-2);opacity:.4}
+.thumb{height:44px;border-radius:5px;border:1px solid var(--line);background:#fff;margin-top:10px;display:block}
 .miss{
   margin-top:10px;padding:8px 11px;border-radius:7px;font-size:12.5px;
   background:rgba(196,69,62,.08);border:1px solid rgba(196,69,62,.25);color:var(--home);
 }
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px}
+.dot.on{background:var(--here)} .dot.off{background:var(--ink-2);opacity:.4}
 
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);font-size:13.5px;font-weight:500}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
 
-.up{display:flex;gap:8px;align-items:center;margin-top:7px}
-.up input[type=file]{font-size:12.5px;padding:6px}
+/* 업로드 슬롯 — 광고주가 보낸 파일을 그대로 올리는 자리 */
+.slot{
+  background:var(--card);border:1.5px dashed var(--line);border-radius:12px;
+  padding:16px;margin-top:8px;text-align:center;
+}
+.slot.filled{border-style:solid;border-color:var(--here);text-align:left}
+.slot .preview{
+  display:flex;align-items:center;gap:12px;
+}
+.slot .preview img{
+  max-height:60px;max-width:140px;border-radius:6px;border:1px solid var(--line);background:#fff;
+}
+.slot .filename{font-size:13px;color:var(--ink-2);word-break:break-all;flex:1}
+.slot .empty{color:var(--ink-2);font-size:13.5px}
+.slot label.pick{
+  display:inline-block;margin-top:10px;padding:9px 16px;border-radius:999px;
+  background:var(--ink);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;
+}
+.slot input[type=file]{display:none}
+.slot .clear{margin-top:10px}
+
 .note{font-size:12.5px;color:var(--ink-2);margin-top:8px;line-height:1.55}
 .warn{background:rgba(196,69,62,.08);border:1px solid rgba(196,69,62,.25);border-radius:9px;padding:12px 14px;font-size:13px;margin-top:14px}
 .ok{background:rgba(47,143,125,.1);border:1px solid rgba(47,143,125,.3);border-radius:9px;padding:12px 14px;font-size:13px;margin-top:14px}
 h2{font-size:15px;margin:30px 0 0;padding-top:22px;border-top:1px solid var(--line)}
+h2 .sub{display:block;font-size:12px;font-weight:400;color:var(--ink-2);margin-top:3px}
+
+details{margin-top:16px}
+details summary{
+  cursor:pointer;font-size:13px;color:var(--ink-2);font-weight:600;
+  list-style:none;display:flex;align-items:center;gap:6px;
+}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"+";font-family:var(--mono);width:16px}
+details[open] summary::before{content:"−"}
+details .inner{margin-top:12px;padding-left:22px}
+
 .foot{height:60px}
 </style>
 </head>
@@ -67,7 +98,7 @@ h2{font-size:15px;margin:30px 0 0;padding-top:22px;border-top:1px solid var(--li
 <header>
   <div class="wrap">
     <h1>광고 관리</h1>
-    <p>오늘 여기 — 배너와 원페이지 광고물을 등록합니다</p>
+    <p>오늘 여기 — 광고주가 보낸 파일을 그대로 올립니다</p>
   </div>
 </header>
 
@@ -88,64 +119,13 @@ h2{font-size:15px;margin:30px 0 0;padding-top:22px;border-top:1px solid var(--li
     <h2 style="border:none;padding:0;margin-top:22px">등록된 광고 <span id="count"></span></h2>
     <div id="list"></div>
 
-    <h2>광고 추가 / 수정</h2>
+    <h2>광고주 정보<span class="sub">사장님이 직접 입력하는 부분입니다</span></h2>
     <input type="hidden" id="editId" />
 
     <div class="row">
       <span class="cap">광고주 이름</span>
       <input id="advertiser" placeholder="예: 자카르타 한마음이사" />
     </div>
-
-    <div class="row">
-      <span class="cap">배너 한 줄 문구</span>
-      <input id="headline" placeholder="예: 이삿짐 포장부터 통관까지 — 한국어 상담" />
-    </div>
-
-    <div class="row">
-      <span class="cap">배너 이미지</span>
-      <input id="banner" placeholder="이미지 주소 (https://...)" />
-      <div class="up">
-        <input type="file" id="bannerFile" accept="image/*" />
-        <button class="sm" data-up="banner">올리기</button>
-      </div>
-      <p class="note">가로로 긴 형태를 권합니다 (1200 × 250px 안팎). 이미지를 고른 뒤 <b>올리기</b>를 누르면 위 칸에 주소가 채워지고,
-      그다음 맨 아래 <b>저장</b>까지 눌러야 앱에 반영됩니다.</p>
-    </div>
-
-    <h2>원페이지 광고물 — 배너를 누르면 펼쳐집니다</h2>
-
-    <div class="row">
-      <span class="cap">전면 이미지</span>
-      <input id="pageImage" placeholder="이미지 주소 (https://...)" />
-      <div class="up">
-        <input type="file" id="pageFile" accept="image/*" />
-        <button class="sm" data-up="pageImage">올리기</button>
-      </div>
-      <p class="note">광고주가 만들어 보낸 홍보 이미지를 그대로 올리시면 됩니다. 폭에 맞춰 표시됩니다.</p>
-    </div>
-
-    <div class="row">
-      <span class="cap">제목</span>
-      <input id="pageTitle" placeholder="예: 8월 이사 예약 시 포장비 무료" />
-    </div>
-
-    <div class="row">
-      <span class="cap">본문</span>
-      <textarea id="pageBody" placeholder="광고주가 보낸 소개 문구를 넣으세요. 줄바꿈은 그대로 유지됩니다."></textarea>
-    </div>
-
-    <div class="row two">
-      <div>
-        <span class="cap">연결 주소</span>
-        <input id="pageLink" placeholder="https:// 또는 카카오톡 오픈채팅 주소" />
-      </div>
-      <div>
-        <span class="cap">버튼 문구</span>
-        <input id="pageLinkLabel" placeholder="카카오톡 문의" />
-      </div>
-    </div>
-
-    <h2>노출 조건</h2>
 
     <div class="row">
       <span class="cap">노출 국가 — 고르지 않으면 모든 국가</span>
@@ -160,22 +140,63 @@ h2{font-size:15px;margin:30px 0 0;padding-top:22px;border-top:1px solid var(--li
     <div class="row">
       <span class="cap">상태</span>
       <div class="chips">
-        <button class="chip" id="active" aria-pressed="true">노출 중</button>
+        <button class="chip" id="active" aria-pressed="true" type="button">노출 중</button>
       </div>
     </div>
 
-    <div class="row two" style="margin-top:22px">
+    <h2>배너 이미지<span class="sub">앱 상단에 표시됩니다 — 광고주가 보낸 파일을 그대로 올리세요</span></h2>
+    <div class="slot" id="bannerSlot">
+      <div class="empty">아직 올린 파일이 없습니다</div>
+      <label class="pick">파일 선택
+        <input type="file" id="bannerFile" accept="image/*" />
+      </label>
+    </div>
+    <input type="hidden" id="banner" />
+
+    <details>
+      <summary>배너 대신 문구로 표시하고 싶다면</summary>
+      <div class="inner">
+        <span class="cap">배너 한 줄 문구</span>
+        <input id="headline" placeholder="예: 이삿짐 포장부터 통관까지" />
+        <p class="note">이미지를 올리지 않았을 때만 이 문구가 대신 표시됩니다.</p>
+      </div>
+    </details>
+
+    <h2>원페이지 광고물<span class="sub">배너를 누르면 펼쳐집니다 — 마찬가지로 파일만 올리세요</span></h2>
+    <div class="slot" id="pageSlot">
+      <div class="empty">아직 올린 파일이 없습니다</div>
+      <label class="pick">파일 선택
+        <input type="file" id="pageFile" accept="image/*" />
+      </label>
+    </div>
+    <input type="hidden" id="pageImage" />
+
+    <div class="row">
+      <span class="cap">연결 주소 — 카카오톡 문의, 홈페이지 등 (선택)</span>
+      <input id="pageLink" placeholder="https:// 또는 카카오톡 오픈채팅 주소" />
+    </div>
+    <div class="row">
+      <span class="cap">버튼 문구</span>
+      <input id="pageLinkLabel" placeholder="카카오톡 문의" value="카카오톡 문의" />
+    </div>
+
+    <details>
+      <summary>이미지 대신 제목·본문을 직접 쓰고 싶다면</summary>
+      <div class="inner">
+        <div class="row" style="margin-top:0">
+          <span class="cap">제목</span>
+          <input id="pageTitle" placeholder="예: 8월 이사 예약 시 포장비 무료" />
+        </div>
+        <div class="row">
+          <span class="cap">본문</span>
+          <textarea id="pageBody" placeholder="광고주가 보낸 소개 문구를 넣으세요"></textarea>
+        </div>
+      </div>
+    </details>
+
+    <div class="row two" style="margin-top:26px">
       <button class="solid" id="save">저장</button>
       <button id="reset">입력 비우기</button>
-    </div>
-
-    <h2>배너 넘김 간격</h2>
-    <div class="row two">
-      <div>
-        <span class="cap">밀리초 (3000 = 3초)</span>
-        <input type="number" id="rotate" value="3000" min="1500" step="500" />
-      </div>
-      <div style="display:flex;align-items:flex-end"><button id="saveRotate">간격 저장</button></div>
     </div>
 
     <div id="msg"></div>
@@ -192,7 +213,7 @@ const COUNTRIES = [
 ];
 const $ = id => document.getElementById(id);
 let key = sessionStorage.getItem('oy.admin') || '';
-let ads = [], rotateMs = 3000, writable = false;
+let ads = [], writable = false, rotateMs = 3000;
 
 const api = (path, opt = {}) => fetch(path, {
   ...opt,
@@ -216,6 +237,7 @@ async function enter(){
   const d = await r.json();
   ads = d.ads || [];
   writable = d.writable;
+  rotateMs = Number(d.rotateMs) || 3000;
   $('gate').hidden = true;
   $('main').hidden = false;
 
@@ -230,7 +252,7 @@ async function enter(){
 
 function drawCountries(sel = []){
   $('countries').innerHTML = COUNTRIES.map(c =>
-    `<button class="chip" data-c="${c.code}" aria-pressed="${sel.includes(c.code)}">${c.name}</button>`).join('');
+    `<button class="chip" type="button" data-c="${c.code}" aria-pressed="${sel.includes(c.code)}">${c.name}</button>`).join('');
 }
 
 function drawList(){
@@ -248,11 +270,31 @@ function drawList(){
         ? `<img class="thumb" src="${a.banner}" alt="">`
         : `<div class="miss">배너 이미지가 없습니다 — 문구만 표시됩니다</div>`}
       <div class="acts">
-        <button class="sm" data-edit="${i}">수정</button>
-        <button class="sm" data-toggle="${i}">${a.active ? '내리기' : '올리기'}</button>
-        <button class="sm danger" data-del="${i}">삭제</button>
+        <button class="sm" type="button" data-edit="${i}">수정</button>
+        <button class="sm" type="button" data-toggle="${i}">${a.active ? '내리기' : '올리기'}</button>
+        <button class="sm danger" type="button" data-del="${i}">삭제</button>
       </div>
     </div>`).join('');
+}
+
+function setSlot(slotId, url, filenameHint){
+  const el = $(slotId);
+  if (url){
+    el.classList.add('filled');
+    el.innerHTML = `
+      <div class="preview">
+        <img src="${url}" alt="">
+        <div class="filename">${filenameHint || '올린 이미지'}</div>
+      </div>
+      <button class="sm clear" type="button" data-clearslot="${slotId}">지우기</button>`;
+  } else {
+    el.classList.remove('filled');
+    el.innerHTML = `
+      <div class="empty">아직 올린 파일이 없습니다</div>
+      <label class="pick">파일 선택
+        <input type="file" id="${slotId}File" accept="image/*" />
+      </label>`;
+  }
 }
 
 function fill(a){
@@ -264,12 +306,14 @@ function fill(a){
   $('pageTitle').value   = a?.page?.title || '';
   $('pageBody').value    = a?.page?.body || '';
   $('pageLink').value    = a?.page?.link || '';
-  $('pageLinkLabel').value = a?.page?.linkLabel || '';
+  $('pageLinkLabel').value = a?.page?.linkLabel || '카카오톡 문의';
   $('from').value        = a?.from || '';
-  $('to').value          = a?.to || '';
+  $('to').value           = a?.to || '';
   $('active').setAttribute('aria-pressed', String(a ? !!a.active : true));
   drawCountries(a?.countries || []);
-  window.scrollTo({ top:document.body.scrollHeight * .35, behavior:'smooth' });
+  setSlot('bannerSlot', a?.banner || '', a?.advertiser ? `${a.advertiser} 배너` : '');
+  setSlot('pageSlot', a?.page?.image || '', a?.advertiser ? `${a.advertiser} 원페이지` : '');
+  window.scrollTo({ top:document.body.scrollHeight * .25, behavior:'smooth' });
 }
 
 async function persist(){
@@ -313,27 +357,36 @@ $('list').addEventListener('click', async e => {
   }
 });
 
-document.addEventListener('click', async e => {
-  const b = e.target.closest('[data-up]');
-  if (!b) return;
-  const field = b.dataset.up;
-  const input = field === 'banner' ? $('bannerFile') : $('pageFile');
-  const f = input.files?.[0];
-  if (!f){ note($('msg'), '파일을 먼저 고르세요', 'warn'); return; }
-  b.disabled = true; b.textContent = '올리는 중';
+/* 업로드 슬롯 — 파일 선택하면 바로 올라간다 (별도 '올리기' 버튼 없음) */
+async function handleUpload(file, hiddenId, slotId){
+  const el = $(slotId);
+  el.innerHTML = `<div class="empty">올리는 중…</div>`;
   try {
-    const r = await api(`/api/upload?name=${encodeURIComponent(f.name)}`, {
-      method:'POST', headers:{ 'content-type':f.type }, body:f,
+    const r = await api(`/api/upload?name=${encodeURIComponent(file.name)}`, {
+      method:'POST', headers:{ 'content-type':file.type }, body:file,
     });
     const d = await r.json();
-    if (!r.ok) throw new Error(d.error || '실패');
-    $(field).value = d.url;
-    note($('msg'), '이미지를 올렸습니다 — 아래 <b>저장</b>을 눌러야 반영됩니다');
+    if (!r.ok) throw new Error(d.error || '업로드 실패');
+    $(hiddenId).value = d.url;
+    setSlot(slotId, d.url, file.name);
   } catch (err) {
     note($('msg'), err.message, 'warn');
-  } finally {
-    b.disabled = false; b.textContent = '올리기';
+    setSlot(slotId, $(hiddenId).value, '');
   }
+}
+
+document.addEventListener('change', e => {
+  if (e.target.id === 'bannerFile' && e.target.files[0]) handleUpload(e.target.files[0], 'banner', 'bannerSlot');
+  if (e.target.id === 'pageFile' && e.target.files[0]) handleUpload(e.target.files[0], 'pageImage', 'pageSlot');
+});
+
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-clearslot]');
+  if (!c) return;
+  const slotId = c.dataset.clearslot;
+  const hiddenId = slotId === 'bannerSlot' ? 'banner' : 'pageImage';
+  $(hiddenId).value = '';
+  setSlot(slotId, '', '');
 });
 
 $('save').addEventListener('click', async () => {
@@ -356,7 +409,7 @@ $('save').addEventListener('click', async () => {
     },
   };
   if (!rec.advertiser){ note($('msg'), '광고주 이름을 넣어 주세요', 'warn'); return; }
-  if (!rec.banner && !rec.headline){ note($('msg'), '배너 이미지나 문구 중 하나는 있어야 합니다', 'warn'); return; }
+  if (!rec.banner && !rec.headline){ note($('msg'), '배너 이미지를 올리거나 문구를 넣어 주세요', 'warn'); return; }
 
   const at = ads.findIndex(a => a.id === rec.id);
   if (at >= 0) ads[at] = rec; else ads.push(rec);
@@ -368,11 +421,6 @@ $('save').addEventListener('click', async () => {
 });
 
 $('reset').addEventListener('click', () => fill(null));
-
-$('saveRotate').addEventListener('click', async () => {
-  rotateMs = Math.max(1500, Number($('rotate').value) || 3000);
-  if (await persist()) note($('msg'), `${rotateMs / 1000}초마다 넘어가도록 저장했습니다`);
-});
 
 if (key) enter();
 </script>
