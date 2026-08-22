@@ -31,6 +31,10 @@ const COUNTRIES = {
       { id:'korea',  kw:['Korea Selatan','Korsel','warga Korea'] },
       { id:'rule',   kw:['peraturan baru','pajak','upah minimum','perizinan usaha'] },
       { id:'work',   kw:['investasi','industri','manufaktur','ekspor','pabrik'] },
+      // 이 둘은 일반 키워드 검색이 아니라 정부·대사관 사이트만 지정해 찾는다
+      // (robots.txt가 자동 접근을 막아둔 사이트라 직접 긁지 않고, 구글이 이미 색인한 결과만 가져온다)
+      { id:'gov',     kw:[], siteQuery:'(site:imigrasi.go.id OR site:kemenimipas.go.id)' },
+      { id:'embassy', kw:[], siteQuery:'site:idn.mofa.go.kr' },
     ],
   },
   VN: {
@@ -115,6 +119,8 @@ const TOPIC_LABELS = {
   korea:  { label:'한국 관련',   group:'생활' },
   rule:   { label:'제도·세금',   group:'일' },
   work:   { label:'산업·투자',   group:'일' },
+  gov:     { label:'정부·이민청 공지', group:'공식' },
+  embassy: { label:'대사관 공지',     group:'공식' },
 };
 
 /* ──────────────────────────────────────────────
@@ -124,7 +130,7 @@ const TOPIC_LABELS = {
    기사가 모자라면 그때만 나머지로 채운다.
    ────────────────────────────────────────────── */
 const MAJORS = {
-  ID: ['kompas','detik','tempo','cnnindonesia','cnbcindonesia','kontan','bisnis',
+  ID: ['kompascom','detik','tempo','cnnindonesia','cnbcindonesia','kontan','bisnis',
        'antara','liputan6','tribunnews','jakartapost','katadata','republika',
        'kumparan','okezone','jawapos','medcom','vivacoid','investorid',
        'jakartaglobe','beritasatu','sindonews','merdeka','idntimes','tirto'],
@@ -360,7 +366,12 @@ export default async function handler(req, res){
   const jobs = [
     { seed:null, url:feedUrl(c, null) },
     ...c.cities.map(x => ({ seed:{ city:x.id }, url:feedUrl(c, `"${x.kw[0]}" ${WINDOW}`) })),
-    ...c.topics.map(x => ({ seed:{ topic:x.id }, url:feedUrl(c, `(${x.kw.map(k=>`"${k}"`).join(' OR ')}) ${WINDOW}`) })),
+    ...c.topics.map(x => ({
+      seed:{ topic:x.id },
+      url: feedUrl(c, x.siteQuery
+        ? `${x.siteQuery} ${WINDOW}`
+        : `(${x.kw.map(k=>`"${k}"`).join(' OR ')}) ${WINDOW}`),
+    })),
   ];
 
   const lists = await Promise.all(jobs.map(j => grab(j.url)));
@@ -386,9 +397,13 @@ export default async function handler(req, res){
     .sort((a,b) => new Date(b.published) - new Date(a.published));
 
   // 메이저 우선. 모자라면 나머지로 채워 피드가 비지 않게 한다.
-  const major = all.filter(a => isMajor(a.source, code)).map(a => ({ ...a, major:true }));
-  const rest  = all.filter(a => !isMajor(a.source, code)).map(a => ({ ...a, major:false }));
-  const collected = (major.length >= 25 ? major : [...major, ...rest]).slice(0, POOL);
+  // 정부·대사관 공지(topic: gov/embassy)는 언론사 화이트리스트와 무관하게 항상 포함하고,
+  // 상한(POOL)에 걸려도 밀려나지 않도록 맨 앞에 둔다 — 1차 출처라 배제 대상이 아니다.
+  const isOfficial = a => a.topics.includes('gov') || a.topics.includes('embassy');
+  const official   = all.filter(isOfficial).map(a => ({ ...a, major:true }));
+  const major      = all.filter(a => !isOfficial(a) && isMajor(a.source, code)).map(a => ({ ...a, major:true }));
+  const rest       = all.filter(a => !isOfficial(a) && !isMajor(a.source, code)).map(a => ({ ...a, major:false }));
+  const collected  = [...official, ...(major.length >= 25 ? major : [...major, ...rest])].slice(0, POOL);
 
   const articles = await attachKorean(collected);
   const translated = articles.filter(a => a.ko).length;
