@@ -287,14 +287,34 @@ function tagIt(a, c){
      TRANSLATE_MODEL   = claude-haiku-4-5-20251001   (선택)
    ────────────────────────────────────────────── */
 const TRANSLATE_MAX = 60;   // 상위 몇 건까지 번역할지 (POOL 전체)
-const BATCH = 16;           // 한 번에 보낼 건수
+const BATCH = 10;           // 한 번에 보낼 건수 — 작을수록 한 묶음 실패의 피해가 작다
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* 응답이 완전한 JSON 배열이 아니어도(중간에 잘렸어도) 살릴 수 있는 항목은 살린다.
+   토큰 한도에 걸려 배열 뒤쪽이 잘리는 경우, 앞쪽 항목들은 여전히 완전한 객체다. */
+function salvageJson(text){
+  try {
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  const items = [];
+  const re = /\{\s*"i"\s*:\s*(\d+)\s*,\s*"t"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"s"\s*:\s*"((?:[^"\\]|\\.)*)"\s*\}/g;
+  let m;
+  while ((m = re.exec(text))) {
+    try {
+      items.push({ i: Number(m[1]), t: JSON.parse(`"${m[2]}"`), s: JSON.parse(`"${m[3]}"`) });
+    } catch {}
+  }
+  return items;
+}
 
 async function translateBatch(rows, model, key){
   const payload = rows.map((a, i) => ({ i, t: a.title, s: a.snippet || '' }));
 
   const body = {
     model,
-    max_tokens: 4000,
+    max_tokens: 4500,
     system:
       '너는 해외 거주 한국인을 위한 뉴스 앱의 번역기다. 현지 뉴스 제목과 요약을 한국어로 옮긴다.\n' +
       '규칙:\n' +
@@ -321,9 +341,37 @@ async function translateBatch(rows, model, key){
   const data = await r.json();
   const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
   const clean = text.replace(/```json|```/g, '').trim();
-  const parsed = JSON.parse(clean);
-  if (!Array.isArray(parsed)) throw new Error('not an array');
-  return parsed;
+  return salvageJson(clean);   // 완전히 파싱되든, 앞부분만 건지든 배열을 돌려준다
+}
+
+/* 묶음 하나를 번역한다. 실패하면 한 번 재시도하고,
+   그래도 안 되면 절반으로 쪼개 다시 시도한다 — 이러면 특정 기사 하나가
+   말썽이어도 그 기사만 빠지고 나머지는 살아남는다. */
+async function translateChunk(chunk, model, key, depth = 0){
+  try {
+    const out = await translateBatch(chunk, model, key);
+    if (out.length > 0) return out;
+    throw new Error('empty result');
+  } catch (e) {
+    if (depth === 0){
+      await sleep(700);
+      try {
+        const out = await translateBatch(chunk, model, key);
+        if (out.length > 0) return out;
+      } catch {}
+    }
+    if (chunk.length > 1 && depth < 2){
+      const mid = Math.ceil(chunk.length / 2);
+      const [a, b] = await Promise.all([
+        translateChunk(chunk.slice(0, mid), model, key, depth + 1),
+        translateChunk(chunk.slice(mid),    model, key, depth + 1),
+      ]);
+      // 뒤쪽 절반의 i는 원래 청크 기준이었으므로 앞쪽 절반 길이만큼 되돌려 맞춘다
+      return [...a, ...b.map(r => ({ ...r, i: r.i + mid }))];
+    }
+    console.error(`translate failed (depth ${depth}, size ${chunk.length}):`, e.message);
+    return [];
+  }
 }
 
 async function attachKorean(articles){
@@ -336,23 +384,16 @@ async function attachKorean(articles){
   const chunks = [];
   for (let i = 0; i < target.length; i += BATCH) chunks.push(target.slice(i, i + BATCH));
 
-  // 한 묶음이 실패해도 나머지는 살린다. 번역이 없으면 원문 그대로 나간다.
-  const done = await Promise.all(chunks.map(async (chunk, ci) => {
-    try {
-      const out = await translateBatch(chunk, model, key);
-      out.forEach(row => {
-        const a = chunk[row.i];
-        if (a && row.t) a.ko = { title: String(row.t), snippet: String(row.s || '') };
-      });
-      return true;
-    } catch (e) {
-      console.error(`translate chunk ${ci} failed:`, e.message);
-      return false;
-    }
+  // 묶음 하나가 통째로 실패해도 나머지 묶음, 그리고 그 묶음 안에서 건진 항목까지는 살린다.
+  await Promise.all(chunks.map(async chunk => {
+    const out = await translateChunk(chunk, model, key);
+    out.forEach(row => {
+      const a = chunk[row.i];
+      if (a && row.t) a.ko = { title: String(row.t), snippet: String(row.s || '') };
+    });
   }));
 
-  return articles.map(a => ({ ...a, translated: !!a.ko, _ok: done }))
-    .map(({ _ok, ...a }) => a);
+  return articles.map(a => ({ ...a, translated: !!a.ko }));
 }
 
 export default async function handler(req, res){
