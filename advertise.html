@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>오늘 여기 — 광고 안내</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+:root{
+  --dusk:#2A2440;--paper:#F2EFF4;--card:#fff;--ink:#221D2E;--ink-2:#6A6480;
+  --here:#2F8F7D;--home:#C4453E;--line:rgba(34,29,46,.14);
+  --display:"Gowun Batang",serif;
+  --body:"Pretendard Variable",Pretendard,-apple-system,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.55;font-size:13.5px}
+.sheet{max-width:800px;margin:0 auto;background:var(--card);box-shadow:0 2px 20px rgba(34,29,46,.08)}
+
+.top{background:var(--dusk);color:#EFECF5;padding:18px 30px 16px}
+.brand{display:flex;align-items:baseline;gap:9px}
+.brand h1{font-family:var(--display);font-weight:700;font-size:24px;margin:0;letter-spacing:.04em}
+.brand span{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,236,245,.45)}
+.top p{margin:6px 0 0;font-size:12.5px;color:rgba(239,236,245,.72)}
+.top .kicker{
+  display:inline-block;margin-top:10px;padding:3px 11px;border-radius:999px;
+  border:1px solid rgba(239,236,245,.26);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:rgba(239,236,245,.8);
+}
+
+.body{padding:18px 30px 22px}
+h2{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-2);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--line);
+}
+h2:first-child{margin-top:0}
+p{margin:0 0 6px}
+.lead{color:var(--ink-2);font-size:13px}
+
+.mock{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:2px 0 8px;display:flex;align-items:stretch}
+.mock .m-head{background:var(--dusk);color:rgba(239,236,245,.55);padding:8px 12px;font-size:9.5px;font-family:var(--mono);width:150px;flex:none;display:flex;align-items:center}
+.mock .m-ad{
+  flex:1;background:#3B3457;color:#EFECF5;padding:0 12px;display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:600;position:relative;
+}
+.mock .m-ad::before{
+  content:"AD";position:absolute;left:0;top:0;padding:1.5px 6px;
+  background:rgba(34,29,46,.6);font-family:var(--mono);font-size:7.5px;letter-spacing:.12em;font-weight:400;
+}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px}
+th,td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{
+  font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-2);font-weight:400;width:30%;white-space:nowrap;
+}
+td b{font-weight:600}
+.price{color:var(--here);font-weight:700}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--paper);border-radius:9px;padding:11px 13px}
+.card h3{font-family:var(--display);font-size:13.5px;margin:0 0 6px;font-weight:700}
+.card ul{margin:0;padding-left:15px;font-size:11.5px}
+.card li{margin-bottom:3px}
+.card li b{color:var(--here)}
+
+.flow{display:flex;align-items:center;gap:0;font-size:11.5px;margin-top:4px}
+.flow .step{flex:1;text-align:center;padding:9px 6px;background:var(--paper);border-radius:8px}
+.flow .step b{display:block;font-family:var(--mono);font-size:9px;color:var(--here);margin-bottom:3px}
+.flow .arrow{flex:none;padding:0 6px;color:var(--ink-2)}
+
+.blank{color:var(--ink-2);background:rgba(34,29,46,.05);padding:1px 7px;border-radius:4px;font-size:11.5px}
+
+.foot{
+  margin-top:16px;padding-top:11px;border-top:1.5px solid var(--ink);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;
+}
+.foot .who{font-size:12px}
+.foot .who b{font-family:var(--display);font-size:14px}
+.foot .note{font-family:var(--mono);font-size:9.5px;color:var(--ink-2);text-align:right}
+
+@media print{
+  body{background:#fff}
+  .sheet{box-shadow:none;max-width:none}
+  @page{size:A4;margin:9mm}
+}
+@media (max-width:600px){
+  .two,.mock{grid-template-columns:1fr;flex-direction:column}
+  .mock .m-head{width:auto}
+  .body,.top{padding-left:18px;padding-right:18px}
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <h1>오늘 여기</h1>
+      <span>Korean abroad</span>
+    </div>
+    <p>인도네시아에 사는 한국인을 위한 현지 소식 앱 — 매일 아침 현지 주요 언론 20건을 한국어로.</p>
+    <span class="kicker">광고 안내</span>
+  </div>
+
+  <div class="body">
+
+    <h2>어떤 앱인가</h2>
+    <p class="lead">
+      자카르타·브카시·찌카랑 등 인도네시아 거주 한국인이 매일 아침 여는 앱입니다.
+      Kompas·Detik·Tempo·CNN Indonesia 등 현지 주요 언론 20건을 한국어로 골라 보여주고,
+      독자가 사는 도시·관심사(비자·환율·교통·의료 등)에 맞춰 정렬합니다.
+    </p>
+
+    <h2>광고 노출 위치</h2>
+    <div class="mock">
+      <div class="m-head">화면 맨 위 · 고정</div>
+      <div class="m-ad">여기에 배너가 들어갑니다</div>
+    </div>
+    <p style="font-size:12px">
+      독자가 기사를 아무리 내려도 사라지지 않는 <b>상단 고정</b> 자리입니다.
+      광고가 여럿이면 <b>3초마다</b> 순서대로 바뀌고, 배너를 누르면 준비하신 <b>원페이지 광고물</b>이 펼쳐집니다.
+    </p>
+
+    <h2>보내주실 것</h2>
+    <div class="two">
+      <div class="card">
+        <h3>1. 배너 이미지</h3>
+        <ul>
+          <li>크기 <b>1200 × 250px</b> (가로형)</li>
+          <li>JPG/PNG, 8MB 이하, 글씨는 크고 굵게</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>2. 원페이지 광고물</h3>
+        <ul>
+          <li>세로형 이미지 1장 (배너 누르면 펼쳐짐)</li>
+          <li>연결 주소 1개 (카카오톡 등)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>게재 조건</h2>
+    <table>
+      <tr><th>노출 국가</th><td>인도네시아 (베트남·필리핀·캄보디아 확장 예정)</td></tr>
+      <tr><th>게재 기간</th><td>시작일 지정, 종료일이 지나면 자동으로 내려갑니다</td></tr>
+      <tr><th>광고료</th><td class="price">별도 문의</td></tr>
+    </table>
+
+    <h2>진행 순서</h2>
+    <div class="flow">
+      <div class="step"><b>1</b>소재 전달</div>
+      <div class="arrow">→</div>
+      <div class="step"><b>2</b>시안 확인</div>
+      <div class="arrow">→</div>
+      <div class="step"><b>3</b>게재 시작</div>
+    </div>
+
+    <div class="foot">
+      <div class="who">
+        <b>오늘 여기</b><br>
+        담당 <span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        · 연락처 <span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+      </div>
+      <div class="note">
+        oneul-yeogi.vercel.app<br>
+        2026
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
