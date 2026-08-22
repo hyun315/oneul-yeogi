@@ -20,6 +20,8 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);f
 header{background:var(--dusk);color:#EFECF5;padding:20px 0}
 header h1{font-size:19px;margin:0;font-weight:600}
 header p{margin:5px 0 0;font-size:12.5px;color:rgba(239,236,245,.6)}
+.hdrRow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.ghost{border-color:rgba(239,236,245,.4);color:#EFECF5;background:none}
 :focus-visible{outline:2px solid var(--here);outline-offset:2px}
 
 .cap{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);display:block;margin-bottom:7px}
@@ -96,9 +98,12 @@ details .inner{margin-top:12px;padding-left:22px}
 <body>
 
 <header>
-  <div class="wrap">
-    <h1>광고 관리</h1>
-    <p>오늘 여기 — 광고주가 보낸 파일을 그대로 올립니다</p>
+  <div class="wrap hdrRow">
+    <div>
+      <h1>광고 관리</h1>
+      <p>오늘 여기 — 광고주가 보낸 파일을 그대로 올립니다</p>
+    </div>
+    <button class="sm ghost" id="logout" hidden type="button">로그아웃</button>
   </div>
 </header>
 
@@ -212,7 +217,7 @@ const COUNTRIES = [
   { code:'KH', name:'캄보디아' },
 ];
 const $ = id => document.getElementById(id);
-let key = sessionStorage.getItem('oy.admin') || '';
+let key = localStorage.getItem('oy.admin') || '';
 let ads = [], writable = false, rotateMs = 3000;
 
 const api = (path, opt = {}) => fetch(path, {
@@ -230,10 +235,11 @@ async function enter(){
   if (!key) return;
   const r = await api('/api/ads?all=1');
   if (!r.ok){
+    localStorage.removeItem('oy.admin');
     note($('gateMsg'), '비밀번호가 맞지 않습니다. Vercel의 ADMIN_PASSWORD 값을 확인해 주세요.', 'warn');
     return;
   }
-  sessionStorage.setItem('oy.admin', key);
+  localStorage.setItem('oy.admin', key);
   const d = await r.json();
   ads = d.ads || [];
   writable = d.writable;
@@ -248,6 +254,7 @@ async function enter(){
   }
   drawCountries();
   drawList();
+  $('logout').hidden = false;
 }
 
 function drawCountries(sel = []){
@@ -328,6 +335,11 @@ async function persist(){
 }
 
 $('enter').addEventListener('click', enter);
+$('logout').addEventListener('click', () => {
+  if (!confirm('로그아웃할까요? 다음에 다시 비밀번호를 입력해야 합니다.')) return;
+  localStorage.removeItem('oy.admin');
+  location.reload();
+});
 $('pw').addEventListener('keydown', e => { if (e.key === 'Enter') enter(); });
 
 $('active').addEventListener('click', e => {
