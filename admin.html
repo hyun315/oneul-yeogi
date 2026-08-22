@@ -49,6 +49,12 @@ button:disabled{opacity:.4;cursor:default}
   background:rgba(196,69,62,.08);border:1px solid rgba(196,69,62,.25);color:var(--home);
 }
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px}
+.order{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;border-radius:50%;margin-right:8px;
+  background:var(--paper);color:var(--ink-2);
+  font-family:var(--mono);font-size:11px;font-weight:600;vertical-align:middle;
+}
 .dot.on{background:var(--here)} .dot.off{background:var(--ink-2);opacity:.4}
 
 .chips{display:flex;flex-wrap:wrap;gap:7px}
@@ -270,13 +276,15 @@ function drawList(){
   }
   $('list').innerHTML = ads.map((a, i) => `
     <div class="card">
-      <h3><span class="dot ${a.active ? 'on' : 'off'}"></span>${a.advertiser || '(이름 없음)'}</h3>
+      <h3><span class="order">${i+1}</span><span class="dot ${a.active ? 'on' : 'off'}"></span>${a.advertiser || '(이름 없음)'}</h3>
       <div class="meta">${(a.countries?.length ? a.countries.join(', ') : '전체 국가')}
         · ${a.from || '시작 제한 없음'} ~ ${a.to || '종료 제한 없음'}</div>
       ${a.banner
         ? `<img class="thumb" src="${a.banner}" alt="">`
         : `<div class="miss">배너 이미지가 없습니다 — 문구만 표시됩니다</div>`}
       <div class="acts">
+        <button class="sm" type="button" data-up="${i}" ${i===0?'disabled':''}>↑ 순서</button>
+        <button class="sm" type="button" data-down="${i}" ${i===ads.length-1?'disabled':''}>↓ 순서</button>
         <button class="sm" type="button" data-edit="${i}">수정</button>
         <button class="sm" type="button" data-toggle="${i}">${a.active ? '내리기' : '올리기'}</button>
         <button class="sm danger" type="button" data-del="${i}">삭제</button>
@@ -357,7 +365,17 @@ $('countries').addEventListener('click', e => {
 
 $('list').addEventListener('click', async e => {
   const b = e.target.closest('button');
-  if (!b) return;
+  if (!b || b.disabled) return;
+  if (b.dataset.up != null){
+    const i = +b.dataset.up;
+    [ads[i-1], ads[i]] = [ads[i], ads[i-1]];
+    if (await persist()) drawList();
+  }
+  if (b.dataset.down != null){
+    const i = +b.dataset.down;
+    [ads[i], ads[i+1]] = [ads[i+1], ads[i]];
+    if (await persist()) drawList();
+  }
   if (b.dataset.edit  != null) fill(ads[+b.dataset.edit]);
   if (b.dataset.toggle != null){
     ads[+b.dataset.toggle].active = !ads[+b.dataset.toggle].active;
