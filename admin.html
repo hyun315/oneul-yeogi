@@ -153,7 +153,7 @@ details .inner{margin-top:12px;padding-left:22px}
     <div class="slot" id="bannerSlot">
       <div class="empty">아직 올린 파일이 없습니다</div>
       <label class="pick">파일 선택
-        <input type="file" id="bannerFile" accept="image/*" />
+        <input type="file" id="bannerFile" data-target="banner" accept="image/*" />
       </label>
     </div>
     <input type="hidden" id="banner" />
@@ -171,7 +171,7 @@ details .inner{margin-top:12px;padding-left:22px}
     <div class="slot" id="pageSlot">
       <div class="empty">아직 올린 파일이 없습니다</div>
       <label class="pick">파일 선택
-        <input type="file" id="pageFile" accept="image/*" />
+        <input type="file" id="pageFile" data-target="page" accept="image/*" />
       </label>
     </div>
     <input type="hidden" id="pageImage" />
@@ -286,6 +286,7 @@ function drawList(){
 
 function setSlot(slotId, url, filenameHint){
   const el = $(slotId);
+  const target = slotId === 'bannerSlot' ? 'banner' : 'page';   // 배너/원페이지 구분자 — id가 아니라 이 값으로 업로드를 연결한다
   if (url){
     el.classList.add('filled');
     el.innerHTML = `
@@ -299,7 +300,7 @@ function setSlot(slotId, url, filenameHint){
     el.innerHTML = `
       <div class="empty">아직 올린 파일이 없습니다</div>
       <label class="pick">파일 선택
-        <input type="file" id="${slotId}File" accept="image/*" />
+        <input type="file" data-target="${target}" accept="image/*" />
       </label>`;
   }
 }
@@ -388,8 +389,10 @@ async function handleUpload(file, hiddenId, slotId){
 }
 
 document.addEventListener('change', e => {
-  if (e.target.id === 'bannerFile' && e.target.files[0]) handleUpload(e.target.files[0], 'banner', 'bannerSlot');
-  if (e.target.id === 'pageFile' && e.target.files[0]) handleUpload(e.target.files[0], 'pageImage', 'pageSlot');
+  const target = e.target.dataset?.target;
+  if (!target || !e.target.files[0]) return;
+  if (target === 'banner') handleUpload(e.target.files[0], 'banner', 'bannerSlot');
+  if (target === 'page')   handleUpload(e.target.files[0], 'pageImage', 'pageSlot');
 });
 
 document.addEventListener('click', e => {
