@@ -610,6 +610,18 @@ async function toggleItem(card){
 let ads = [], adIdx = 0, adTimer = null, rotateMs = 3000;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+/* 광고 연결 주소는 새 탭이 아니라 작은 팝업 창으로 연다 */
+function openPopup(url){
+  const w = 480, h = 760;
+  const left = Math.max(0, Math.round((window.screen.width  - w) / 2));
+  const top  = Math.max(0, Math.round((window.screen.height - h) / 2));
+  const win = window.open(
+    url, 'oy_ad_popup',
+    `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes,noopener`
+  );
+  if (!win) window.open(url, '_blank', 'noopener');   // 팝업이 막혔으면 새 탭으로 대체
+}
+
 async function loadAds(){
   clearInterval(adTimer);
   try {
@@ -647,7 +659,7 @@ function openAd(){
   const hasPage = !!(p.image || p.title || p.body);
 
   // 펼칠 내용이 없고 연결 주소만 있으면 빈 창 대신 바로 연다
-  if (!hasPage && p.link){ window.open(p.link, '_blank', 'noopener'); return; }
+  if (!hasPage && p.link){ openPopup(p.link); return; }
 
   clearInterval(adTimer);                 // 보는 동안 안 넘어가게
   $('sheetWho').textContent = `광고 · ${a.advertiser || ''}`;
@@ -655,7 +667,7 @@ function openAd(){
     ? (p.image ? `<img src="${esc(p.image)}" alt="${esc(a.advertiser || '광고')}">` : '') +
       (p.title ? `<h3>${esc(p.title)}</h3>` : '') +
       (p.body  ? `<p>${esc(p.body)}</p>` : '') +
-      (p.link  ? `<a class="sheet-cta" href="${esc(p.link)}" target="_blank" rel="noopener">${esc(p.linkLabel || '자세히 보기')}</a>` : '')
+      (p.link  ? `<a class="sheet-cta" href="${esc(p.link)}" data-popup="${esc(p.link)}">${esc(p.linkLabel || '자세히 보기')}</a>` : '')
     : `<div class="sheet-empty">등록된 광고 내용이 없습니다.<br>관리자 화면에서 원페이지 광고물을 넣어 주세요.</div>`;
   $('sheet').hidden = false;
 }
@@ -670,7 +682,11 @@ function closeAd(){
 
 $('adwrap').addEventListener('click', openAd);
 $('sheetClose').addEventListener('click', closeAd);
-$('sheet').addEventListener('click', e => { if (e.target === $('sheet')) closeAd(); });
+$('sheet').addEventListener('click', e => {
+  if (e.target === $('sheet')) { closeAd(); return; }
+  const link = e.target.closest('[data-popup]');
+  if (link){ e.preventDefault(); openPopup(link.dataset.popup); }
+});
 
 $('setup').addEventListener('click', () => {
   const open = $('panel').classList.toggle('open');
